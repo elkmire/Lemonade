@@ -2820,102 +2820,132 @@
         window.exportKey = exportKey;
         window.deleteKey = deleteKey;
 
+
         document.addEventListener('DOMContentLoaded', function() {
         if ('serviceWorker' in navigator) {
-            // Define the service worker code as string
-            const swContent = `
-            const CACHE_NAME = 'lemonade-cache-v1';
-            const urlsToCache = [
-                './',
-                './index.html'
-            ];
+            // For GitHub Pages we need to use a different approach
+            // Create and inject the service worker script into the page
+            const scriptEl = document.createElement('script');
+            scriptEl.type = 'text/javascript';
+            scriptEl.id = 'sw-installer';
             
-            self.addEventListener('install', (event) => {
-                event.waitUntil(
-                caches.open(CACHE_NAME)
-                    .then((cache) => {
-                    return cache.addAll(urlsToCache);
-                    })
-                );
-            });
-            
-            self.addEventListener('fetch', (event) => {
-                event.respondWith(
-                caches.match(event.request)
-                    .then((response) => {
-                    if (response) {
-                        return response;
-                    }
-                    return fetch(event.request);
-                    })
-                );
-            });
-            
-            self.addEventListener('activate', (event) => {
-                const cacheWhitelist = [CACHE_NAME];
-                event.waitUntil(
-                caches.keys().then((cacheNames) => {
-                    return Promise.all(
-                    cacheNames.map((cacheName) => {
-                        if (cacheWhitelist.indexOf(cacheName) === -1) {
-                        return caches.delete(cacheName);
+            // This is a self-executing function that will create and register the SW
+            scriptEl.textContent = `
+            (function() {
+                // Service worker code as string
+                const swCode = \`
+                const CACHE_NAME = 'lemonade-cache-v1';
+                const urlsToCache = [
+                    './',
+                    './index.html'
+                ];
+                
+                self.addEventListener('install', (event) => {
+                    event.waitUntil(
+                    caches.open(CACHE_NAME)
+                        .then((cache) => {
+                        return cache.addAll(urlsToCache);
+                        })
+                    );
+                });
+                
+                self.addEventListener('fetch', (event) => {
+                    event.respondWith(
+                    caches.match(event.request)
+                        .then((response) => {
+                        if (response) {
+                            return response;
                         }
+                        return fetch(event.request);
+                        })
+                    );
+                });
+                
+                self.addEventListener('activate', (event) => {
+                    const cacheWhitelist = [CACHE_NAME];
+                    event.waitUntil(
+                    caches.keys().then((cacheNames) => {
+                        return Promise.all(
+                        cacheNames.map((cacheName) => {
+                            if (cacheWhitelist.indexOf(cacheName) === -1) {
+                            return caches.delete(cacheName);
+                            }
+                        })
+                        );
                     })
                     );
-                })
-                );
-            });
-            `;
-
-            // Create a Blob containing the service worker code
-            const swBlob = new Blob([swContent], {type: 'application/javascript'});
-            
-            // Create an object URL for the Blob
-            const swUrl = URL.createObjectURL(swBlob);
-            
-            // Register the service worker with the Blob URL
-            navigator.serviceWorker.register(swUrl)
-            .then(registration => {
-                console.log('Service Worker registered successfully:', registration.scope);
+                });
+                \`;
                 
-                // Clean up the Blob URL after the service worker is registered
-                URL.revokeObjectURL(swUrl);
-            })
-            .catch(error => {
-                console.error('Service Worker registration failed:', error);
-            });
-        }
+                // Create a custom service worker registration method using data URL
+                // This technique works better on GitHub Pages than Blob URLs
+                const dataUrl = 'data:application/javascript;base64,' + btoa(swCode);
+                
+                // Register the service worker with the data URL
+                navigator.serviceWorker.register(dataUrl, {scope: './'})
+                .then(registration => {
+                    console.log('Service Worker registered successfully with scope:', registration.scope);
+                })
+                .catch(error => {
+                    console.error('Service Worker registration failed:', error.toString());
+                    
+                    // Try fallback to window.navigator.serviceWorker approach if data URL fails
+                    if (window.navigator && window.navigator.serviceWorker) {
+                    const newSW = new Blob([swCode], {type: 'application/javascript'});
+                    navigator.serviceWorker.register(URL.createObjectURL(newSW))
+                        .then(reg => console.log('Fallback registration successful:', reg.scope))
+                        .catch(err => console.error('Fallback registration also failed:', err.toString()));
+                    }
+                });
+            })();
+            `;
+            
+            // Add the script to the page
+            document.head.appendChild(scriptEl);
 
-        //Get manifest data from the embedded JSON and inject it inline
-        const manifestElement = document.getElementById('pwa-manifest');
-        if (manifestElement) {
+            // Handle manifest creation - this looks correct but let's improve it
+            const manifestElement = document.getElementById('pwa-manifest');
+            if (manifestElement) {
             try {
-            // Parse the manifest data from the script element
-            const manifestObj = JSON.parse(manifestElement.textContent);
-            
-            // Convert to a properly formatted JSON string
-            const manifestString = JSON.stringify(manifestObj);
-            
-            // Create a data URL for the manifest
-            const dataUrl = 'data:application/json;base64,' + btoa(manifestString);
-            
-            // Create and append the manifest link
-            const manifestLink = document.createElement('link');
-            manifestLink.rel = 'manifest';
-            manifestLink.href = dataUrl;
-            document.head.appendChild(manifestLink);
-            
-            console.log('Web manifest added successfully');
+                // Parse the manifest data from the script element
+                const manifestObj = JSON.parse(manifestElement.textContent);
+                
+                // Set the start_url to match GitHub Pages path if needed
+                // This helps with PWA installation on GitHub Pages
+                const currentPath = window.location.pathname;
+                if (currentPath !== '/' && !manifestObj.start_url.includes(currentPath)) {
+                manifestObj.start_url = currentPath;
+                }
+                
+                // Convert to a properly formatted JSON string
+                const manifestString = JSON.stringify(manifestObj);
+                
+                // Create a data URL for the manifest
+                const dataUrl = 'data:application/json;base64,' + btoa(manifestString);
+                
+                // Remove any existing manifest link to avoid conflicts
+                const existingManifest = document.querySelector('link[rel="manifest"]');
+                if (existingManifest) {
+                existingManifest.remove();
+                }
+                
+                // Create and append the manifest link
+                const manifestLink = document.createElement('link');
+                manifestLink.rel = 'manifest';
+                manifestLink.href = dataUrl;
+                document.head.appendChild(manifestLink);
+                
+                console.log('Web manifest added successfully');
             } catch (error) {
-            console.error('Error processing manifest:', error);
+                console.error('Error processing manifest:', error);
             }
-        }
+            }
 
-        // Handle installation prompt
-        let deferredPrompt;
-        
-        // Create floating install button if it doesn't exist
-        if (!document.getElementById('pwa-install-container')) {
+            // INSTALLATION UI HANDLING
+            let deferredPrompt;
+            
+            // Create floating install button if it doesn't exist
+            if (!document.getElementById('pwa-install-container')) {
             const container = document.createElement('div');
             container.id = 'pwa-install-container';
             container.style.cssText = 'position:fixed; bottom:20px; left:50%; transform:translateX(-50%); z-index:999; display:none;';
@@ -2927,10 +2957,10 @@
             
             container.appendChild(button);
             document.body.appendChild(container);
-        }
+            }
 
-        // Listen for the beforeinstallprompt event
-        window.addEventListener('beforeinstallprompt', (e) => {
+            // Listen for the beforeinstallprompt event
+            window.addEventListener('beforeinstallprompt', (e) => {
             // Prevent Chrome 67 and earlier from automatically showing the prompt
             e.preventDefault();
             
@@ -2942,53 +2972,92 @@
             
             // Handler for install button click
             document.getElementById('pwa-install-button').addEventListener('click', () => {
-            // Hide the app provided install prompt
-            document.getElementById('pwa-install-container').style.display = 'none';
-            
-            // Show the browser install prompt
-            deferredPrompt.prompt();
-            
-            // Wait for the user to respond to the prompt
-            deferredPrompt.userChoice.then((choiceResult) => {
+                // Hide the app provided install prompt
+                document.getElementById('pwa-install-container').style.display = 'none';
+                
+                // Show the browser install prompt
+                deferredPrompt.prompt();
+                
+                // Wait for the user to respond to the prompt
+                deferredPrompt.userChoice.then((choiceResult) => {
                 if (choiceResult.outcome === 'accepted') {
-                console.log('User accepted the install prompt');
-                // Show status if the function exists
-                if (typeof showStatus === 'function') {
+                    console.log('User accepted the install prompt');
+                    // Show status if the function exists
+                    if (typeof showStatus === 'function') {
                     showStatus('pwaStatus', 'App installed successfully!', 'success');
-                }
+                    }
                 } else {
-                console.log('User dismissed the install prompt');
+                    console.log('User dismissed the install prompt');
                 }
                 // Clear the saved prompt
                 deferredPrompt = null;
+                });
             });
             });
-        });
 
-        // Handle app installed event
-        window.addEventListener('appinstalled', (event) => {
+            // Handle app installed event
+            window.addEventListener('appinstalled', (event) => {
             console.log('Lemonade has been installed');
             // Hide install button if shown
             document.getElementById('pwa-install-container').style.display = 'none';
             // Show status if the function exists
             if (typeof showStatus === 'function') {
-            showStatus('pwaStatus', 'App successfully installed!', 'success');
+                showStatus('pwaStatus', 'App successfully installed!', 'success');
             }
-        });
+            });
 
-        // Simplified update check function that just shows install button if available
-        window.checkForPWAUpdates = function() {
+            // Enhanced checkForPWAUpdates function
+            window.checkForPWAUpdates = function() {
+            // First check if we have a deferred prompt
             if (deferredPrompt) {
-            document.getElementById('pwa-install-container').style.display = 'block';
+                document.getElementById('pwa-install-container').style.display = 'block';
+                if (typeof showStatus === 'function') {
+                showStatus('pwaStatus', 'App is ready to install! Click Install button.', 'success');
+                }
+                return;
+            }
+            
+            // If no deferred prompt, check if the service worker is registered
+            navigator.serviceWorker.getRegistration()
+                .then(registration => {
+                if (registration) {
+                    // We have a service worker, but browser doesn't think app is installable yet
+                    if (typeof showStatus === 'function') {
+                    showStatus('pwaStatus', 'App is installed or ready to be installed from browser menu.', 'success');
+                    }
+                } else {
+                    // No service worker registered, try to register one
+                    if (document.getElementById('sw-installer')) {
+                    // We already tried to install but something went wrong
+                    if (typeof showStatus === 'function') {
+                        showStatus('pwaStatus', 'Unable to install app. Try using a supported browser like Chrome.', 'warning');
+                    }
+                    } else {
+                    // Try reloading the page to trigger service worker registration again
+                    if (typeof showStatus === 'function') {
+                        showStatus('pwaStatus', 'Preparing app installation...', 'warning');
+                        setTimeout(() => {
+                        window.location.reload();
+                        }, 2000);
+                    }
+                    }
+                }
+                })
+                .catch(error => {
+                console.error('Error checking service worker:', error);
+                if (typeof showStatus === 'function') {
+                    showStatus('pwaStatus', 'Error checking service worker: ' + error.toString(), 'error');
+                }
+                });
+            };
+        } else {
+            // Modify the install button to show a message if service workers aren't supported
+            window.checkForPWAUpdates = function() {
             if (typeof showStatus === 'function') {
-                showStatus('pwaStatus', 'App is ready to install!', 'success');
+                showStatus('pwaStatus', 'Your browser doesn\'t support PWA installation. Try Chrome or Edge.', 'warning');
             }
-            } else {
-            if (typeof showStatus === 'function') {
-                showStatus('pwaStatus', 'App installation not available right now. Try refreshing the page.', 'warning');
-            }
-            }
-        };
+            };
+        }
         });
 
     </script>
