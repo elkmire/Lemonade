@@ -14,23 +14,34 @@
     <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cdefs%3E%3ClinearGradient id='a' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%230066cc'/%3E%3Cstop offset='100%25' stop-color='%2333aaff'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='512' height='512' rx='128' fill='url(%23a)'/%3E%3Cpath d='M256 128a96 96 0 00-96 96v32h-16a16 16 0 00-16 16v96a16 16 0 0016 16h224a16 16 0 0016-16v-96a16 16 0 00-16-16h-16v-32a96 96 0 00-96-96zm0 32c35.3 0 64 28.7 64 64v32H192v-32c0-35.3 28.7-64 64-64zm0 192a32 32 0 100-64 32 32 0 000 64z' fill='white'/%3E%3C/svg%3E">
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cdefs%3E%3ClinearGradient id='a' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%230066cc'/%3E%3Cstop offset='100%25' stop-color='%2333aaff'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='512' height='512' rx='128' fill='url(%23a)'/%3E%3Cpath d='M256 128a96 96 0 00-96 96v32h-16a16 16 0 00-16 16v96a16 16 0 0016 16h224a16 16 0 0016-16v-96a16 16 0 00-16-16h-16v-32a96 96 0 00-96-96zm0 32c35.3 0 64 28.7 64 64v32H192v-32c0-35.3 28.7-64 64-64zm0 192a32 32 0 100-64 32 32 0 000 64z' fill='white'/%3E%3C/svg%3E">
 
-    <script type="application/json" id="pwa-manifest">
+<!-- Replace the existing manifest script tag with this one -->
+<script type="application/json" id="pwa-manifest">
     {
-    "name": "Lemonade",
-    "short_name": "CryptoMsg",
-    "description": "Secure Message Encryption & Decryption",
-    "start_url": "./",
-    "display": "standalone",
-    "background_color": "#121212",
-    "theme_color": "#0066cc",
-    "icons": [
+      "name": "Lemonade",
+      "short_name": "CryptoMsg",
+      "description": "Secure Message Encryption & Decryption",
+      "start_url": "./",
+      "display": "standalone",
+      "background_color": "#121212",
+      "theme_color": "#0066cc",
+      "icons": [
         {
-        "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cdefs%3E%3ClinearGradient id='a' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%230066cc'/%3E%3Cstop offset='100%25' stop-color='%2333aaff'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='512' height='512' rx='128' fill='url(%23a)'/%3E%3Cpath d='M256 128a96 96 0 00-96 96v32h-16a16 16 0 00-16 16v96a16 16 0 0016 16h224a16 16 0 0016-16v-96a16 16 0 00-16-16h-16v-32a96 96 0 00-96-96zm0 32c35.3 0 64 28.7 64 64v32H192v-32c0-35.3 28.7-64 64-64zm0 192a32 32 0 100-64 32 32 0 000 64z' fill='white'/%3E%3C/svg%3E",
-        "sizes": "512x512",
-        "type": "image/svg+xml",
-        "purpose": "any maskable"
+          "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cdefs%3E%3ClinearGradient id='a' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%230066cc'/%3E%3Cstop offset='100%25' stop-color='%2333aaff'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='512' height='512' rx='128' fill='url(%23a)'/%3E%3Cpath d='M256 128a96 96 0 00-96 96v32h-16a16 16 0 00-16 16v96a16 16 0 0016 16h224a16 16 0 0016-16v-96a16 16 0 00-16-16h-16v-32a96 96 0 00-96-96zm0 32c35.3 0 64 28.7 64 64v32H192v-32c0-35.3 28.7-64 64-64zm0 192a32 32 0 100-64 32 32 0 000 64z' fill='white'/%3E%3C/svg%3E",
+          "sizes": "512x512",
+          "type": "image/svg+xml",
+          "purpose": "any maskable"
+        },
+        {
+          "src": "data:image/png;base64,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',
+          "sizes": "192x192",
+          "type": "image/png"
+        },
+        {
+          "src": "data:image/png;base64,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",
+          "sizes": "512x512",
+          "type": "image/png"
         }
-    ]
+      ]
     }
     </script>
     <title>Lemonade</title>
@@ -2810,193 +2821,234 @@
         window.deleteKey = deleteKey;
     </script>
 <script>
-    // PWA Support - Inline Service Worker registration using data URI approach
+    // PWA Support - Service Worker Setup
     (function() {
-        // Generate and register a manifest from our JSON
-        function registerManifest() {
-            const manifestData = document.getElementById('pwa-manifest').textContent;
-            const manifestBlob = new Blob([manifestData], {type: 'application/json'});
-            const manifestURL = URL.createObjectURL(manifestBlob);
+        // Service worker content as string
+        const swContent = `
+            const CACHE_NAME = 'lemonade-cache-v1';
+            const urlsToCache = [
+                './',
+                './index.html'
+            ];
             
-            const link = document.createElement('link');
-            link.rel = 'manifest';
-            link.href = manifestURL;
-            document.head.appendChild(link);
+            self.addEventListener('install', (event) => {
+                event.waitUntil(
+                    caches.open(CACHE_NAME)
+                        .then((cache) => {
+                            return cache.addAll(urlsToCache);
+                        })
+                );
+            });
+            
+            self.addEventListener('fetch', (event) => {
+                event.respondWith(
+                    caches.match(event.request)
+                        .then((response) => {
+                            if (response) {
+                                return response;
+                            }
+                            return fetch(event.request);
+                        })
+                );
+            });
+            
+            self.addEventListener('activate', (event) => {
+                const cacheWhitelist = [CACHE_NAME];
+                event.waitUntil(
+                    caches.keys().then((cacheNames) => {
+                        return Promise.all(
+                            cacheNames.map((cacheName) => {
+                                if (cacheWhitelist.indexOf(cacheName) === -1) {
+                                    return caches.delete(cacheName);
+                                }
+                            })
+                        );
+                    })
+                );
+            });
+        `;
+        
+        // Convert service worker content to blob and get URL
+        function createServiceWorkerBlob() {
+            const blob = new Blob([swContent], { type: 'application/javascript' });
+            return URL.createObjectURL(blob);
         }
         
-        // Register the service worker using a data URI
-        async function registerServiceWorker() {
+        // Install service worker using the blob URL
+        async function installServiceWorker() {
             if ('serviceWorker' in navigator) {
                 try {
-                    // Service worker code as a string
-                    const swCode = `
-                        const CACHE_NAME = 'Lemonade-cache-v1';
-                        const urlsToCache = [
-                            './',
-                            './?source=pwa'
-                        ];
-                        
-                        self.addEventListener('install', (event) => {
-                            event.waitUntil(
-                                caches.open(CACHE_NAME)
-                                    .then((cache) => {
-                                        return cache.addAll(urlsToCache);
-                                    })
-                            );
-                        });
-                        
-                        self.addEventListener('fetch', (event) => {
-                            event.respondWith(
-                                caches.match(event.request)
-                                    .then((response) => {
-                                        // Cache hit - return response
-                                        if (response) {
-                                            return response;
-                                        }
-                                        
-                                        return fetch(event.request).then(
-                                            (response) => {
-                                                // Don't cache non-success responses or cross-origin requests
-                                                if (!response || response.status !== 200 || response.type !== 'basic') {
-                                                    return response;
-                                                }
-                                                
-                                                // Clone the response since it can only be consumed once
-                                                const responseToCache = response.clone();
-                                                
-                                                caches.open(CACHE_NAME)
-                                                    .then((cache) => {
-                                                        cache.put(event.request, responseToCache);
-                                                    });
-                                                    
-                                                return response;
-                                            }
-                                        );
-                                    })
-                            );
-                        });
-                        
-                        self.addEventListener('activate', (event) => {
-                            const cacheWhitelist = [CACHE_NAME];
-                            
-                            event.waitUntil(
-                                caches.keys().then((cacheNames) => {
-                                    return Promise.all(
-                                        cacheNames.map((cacheName) => {
-                                            if (cacheWhitelist.indexOf(cacheName) === -1) {
-                                                return caches.delete(cacheName);
-                                            }
-                                        })
-                                    );
-                                })
-                            );
-                        });
-                    `;
+                    // Create a virtual service worker file
+                    const swUrl = createServiceWorkerBlob();
                     
-                    // Create a data URI with the service worker code
-                    const dataUri = 'data:application/javascript;base64,' + btoa(swCode);
-                    
-                    // Inject a script tag that registers the service worker
-                    const script = document.createElement('script');
-                    script.textContent = `
-                        if ('serviceWorker' in navigator) {
-                            navigator.serviceWorker.register('${dataUri}')
-                                .then(registration => console.log('Service Worker registered with scope:', registration.scope))
-                                .catch(error => console.error('Service Worker registration failed:', error));
-                        }
-                    `;
-                    document.body.appendChild(script);
-                    
-                    console.log('Service Worker registration initiated');
+                    // Register the service worker
+                    const registration = await navigator.serviceWorker.register(swUrl);
+                    console.log('Service Worker registered successfully:', registration.scope);
+                    return registration;
                 } catch (error) {
-                    console.error('Service Worker setup failed:', error);
+                    console.error('Service Worker registration failed:', error);
+                    return null;
                 }
+            } else {
+                console.warn('Service Workers not supported in this browser');
+                return null;
             }
         }
         
-        // Update the checkForPWAUpdates function
+        // Create manifest.json from the JSON element
+        function createManifest() {
+            try {
+                // Get the manifest data from the script tag
+                const manifestElement = document.getElementById('pwa-manifest');
+                if (!manifestElement) {
+                    console.error('Manifest element not found');
+                    return null;
+                }
+                
+                const manifestData = manifestElement.textContent;
+                // Parse to validate and pretty-print
+                const manifestObj = JSON.parse(manifestData);
+                const formattedManifest = JSON.stringify(manifestObj, null, 2);
+                
+                // Create a blob URL for the manifest
+                const blob = new Blob([formattedManifest], { type: 'application/json' });
+                const manifestURL = URL.createObjectURL(blob);
+                
+                // Add the manifest link to the document head
+                const link = document.createElement('link');
+                link.rel = 'manifest';
+                link.href = manifestURL;
+                document.head.appendChild(link);
+                
+                return manifestURL;
+            } catch (error) {
+                console.error('Error creating manifest:', error);
+                return null;
+            }
+        }
+        
+        // Track installation prompt event
+        let deferredPrompt;
+        
+        // Create floating install button
+        function createInstallButton() {
+            const container = document.createElement('div');
+            container.id = 'pwa-install-container';
+            container.style.cssText = 'position:fixed; bottom:20px; left:50%; transform:translateX(-50%); z-index:999; display:none;';
+            
+            const button = document.createElement('button');
+            button.id = 'pwa-install-button';
+            button.textContent = 'Install Lemonade App';
+            button.style.cssText = 'background-color:var(--button-bg); color:var(--button-text); border:none; border-radius:8px; padding:12px 24px; font-size:1rem; cursor:pointer; box-shadow:0 4px 12px rgba(0,0,0,0.2);';
+            
+            container.appendChild(button);
+            document.body.appendChild(container);
+            
+            // Add click handler
+            button.addEventListener('click', async () => {
+                if (!deferredPrompt) {
+                    showStatus('pwaStatus', 'App cannot be installed right now. Try again later.', 'warning');
+                    return;
+                }
+                
+                // Show the browser's install prompt
+                deferredPrompt.prompt();
+                
+                // Wait for user's choice
+                const { outcome } = await deferredPrompt.userChoice;
+                console.log(`User response to PWA install prompt: ${outcome}`);
+                
+                // Clear the saved prompt
+                deferredPrompt = null;
+                
+                // Hide the install button
+                container.style.display = 'none';
+                
+                if (outcome === 'accepted') {
+                    showStatus('pwaStatus', 'Installation successful!', 'success');
+                } else {
+                    showStatus('pwaStatus', 'Installation cancelled', 'warning');
+                }
+            });
+        }
+        
+        // Enhanced update check function that will be exposed globally
         window.checkForPWAUpdates = async function() {
             if ('serviceWorker' in navigator) {
                 try {
+                    // Check for existing registration
                     const registration = await navigator.serviceWorker.getRegistration();
+                    
                     if (registration) {
+                        // We have a service worker, update it
                         await registration.update();
-                        showStatus('pwaStatus', 'App updated to the latest version', 'success');
+                        showStatus('pwaStatus', 'App updated to the latest version.', 'success');
+                        
+                        // Show install button if available
+                        if (deferredPrompt) {
+                            document.getElementById('pwa-install-container').style.display = 'block';
+                            showStatus('pwaStatus', 'App is ready to install! Click Install button to proceed.', 'success');
+                        }
                     } else {
-                        // If no service worker is registered, trigger a new registration
-                        registerServiceWorker();
-                        showStatus('pwaStatus', 'App registered and ready to install!', 'success');
+                        // No service worker registered, install one
+                        const newRegistration = await installServiceWorker();
+                        if (newRegistration) {
+                            showStatus('pwaStatus', 'App registered and ready to install!', 'success');
+                            
+                            // Show install button if available
+                            if (deferredPrompt) {
+                                document.getElementById('pwa-install-container').style.display = 'block';
+                                showStatus('pwaStatus', 'App is ready to install! Click Install button to proceed.', 'success');
+                            } else {
+                                showStatus('pwaStatus', 'App registered. Reload the page to enable installation.', 'success');
+                            }
+                        } else {
+                            showStatus('pwaStatus', 'Failed to register app. Try again or check browser compatibility.', 'error');
+                        }
                     }
                 } catch (error) {
-                    console.error('Update check failed:', error);
+                    console.error('PWA Update error:', error);
                     showStatus('pwaStatus', 'Update check failed: ' + error.message, 'error');
                 }
             } else {
-                showStatus('pwaStatus', 'Service workers not supported in this browser', 'warning');
+                showStatus('pwaStatus', 'Service workers not supported in this browser.', 'warning');
             }
         };
         
-        // Add install event and button for PWA installation
-        let deferredPrompt;
-        
-        function setupInstallButton() {
+        // Initialize the PWA functionality
+        async function initPWA() {
+            // Create and add manifest
+            createManifest();
+            
             // Create install button (initially hidden)
-            const installContainer = document.createElement('div');
-            installContainer.style.cssText = 'position:fixed; bottom:20px; left:50%; transform:translateX(-50%); z-index:999; display:none;';
+            createInstallButton();
             
-            const installButton = document.createElement('button');
-            installButton.textContent = 'Install Lemonade';
-            installButton.style.cssText = 'background-color:var(--button-bg); color:var(--button-text); border:none; border-radius:8px; padding:12px 24px; font-size:1rem; cursor:pointer; box-shadow:0 4px 12px rgba(0,0,0,0.2);';
-            
-            installContainer.appendChild(installButton);
-            document.body.appendChild(installContainer);
+            // Install service worker
+            await installServiceWorker();
             
             // Listen for beforeinstallprompt event
             window.addEventListener('beforeinstallprompt', (e) => {
-                // Prevent default behavior
+                // Prevent default browser install prompt
                 e.preventDefault();
                 
-                // Store the event to use later
+                // Store the event for later use
                 deferredPrompt = e;
+                console.log('Install prompt available, storing for later use');
                 
-                // Show the install button
-                installContainer.style.display = 'block';
+                // Optionally show the install button now
+                document.getElementById('pwa-install-container').style.display = 'block';
             });
             
-            // Add click handler for install button
-            installButton.addEventListener('click', async () => {
-                if (!deferredPrompt) return;
-                
-                // Show the installation prompt
-                deferredPrompt.prompt();
-                
-                // Wait for the user to respond to the prompt
-                const { outcome } = await deferredPrompt.userChoice;
-                console.log(`User response to install prompt: ${outcome}`);
-                
-                // Clear the saved prompt - it can only be used once
+            // Handle installed event
+            window.addEventListener('appinstalled', (event) => {
+                console.log('Lemonade has been installed!');
+                document.getElementById('pwa-install-container').style.display = 'none';
                 deferredPrompt = null;
-                
-                // Hide the button
-                installContainer.style.display = 'none';
-            });
-            
-            // Hide the button if the app is installed
-            window.addEventListener('appinstalled', () => {
-                console.log('PWA installed successfully');
-                installContainer.style.display = 'none';
-                deferredPrompt = null;
+                showStatus('pwaStatus', 'App successfully installed!', 'success');
             });
         }
         
-        // Initialize PWA features
-        function initPWA() {
-            registerManifest();
-            registerServiceWorker();
-            setupInstallButton();
-        }
-        
-        // Initialize when the page is loaded
+        // Start initialization
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', initPWA);
         } else {
