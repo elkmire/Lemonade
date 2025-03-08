@@ -1,0 +1,2975 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';">
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta http-equiv="Referrer-Policy" content="no-referrer">
+    <meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=()">
+    <meta name="theme-color" content="#0066cc">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Lemonade">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cdefs%3E%3ClinearGradient id='a' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%230066cc'/%3E%3Cstop offset='100%25' stop-color='%2333aaff'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='512' height='512' rx='128' fill='url(%23a)'/%3E%3Cpath d='M256 128a96 96 0 00-96 96v32h-16a16 16 0 00-16 16v96a16 16 0 0016 16h224a16 16 0 0016-16v-96a16 16 0 00-16-16h-16v-32a96 96 0 00-96-96zm0 32c35.3 0 64 28.7 64 64v32H192v-32c0-35.3 28.7-64 64-64zm0 192a32 32 0 100-64 32 32 0 000 64z' fill='white'/%3E%3C/svg%3E">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cdefs%3E%3ClinearGradient id='a' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%230066cc'/%3E%3Cstop offset='100%25' stop-color='%2333aaff'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='512' height='512' rx='128' fill='url(%23a)'/%3E%3Cpath d='M256 128a96 96 0 00-96 96v32h-16a16 16 0 00-16 16v96a16 16 0 0016 16h224a16 16 0 0016-16v-96a16 16 0 00-16-16h-16v-32a96 96 0 00-96-96zm0 32c35.3 0 64 28.7 64 64v32H192v-32c0-35.3 28.7-64 64-64zm0 192a32 32 0 100-64 32 32 0 000 64z' fill='white'/%3E%3C/svg%3E">
+
+    <script type="application/json" id="pwa-manifest">
+    {
+    "name": "Lemonade",
+    "short_name": "CryptoMsg",
+    "description": "Secure Message Encryption & Decryption",
+    "start_url": "./",
+    "display": "standalone",
+    "background_color": "#121212",
+    "theme_color": "#0066cc",
+    "icons": [
+        {
+        "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cdefs%3E%3ClinearGradient id='a' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%230066cc'/%3E%3Cstop offset='100%25' stop-color='%2333aaff'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='512' height='512' rx='128' fill='url(%23a)'/%3E%3Cpath d='M256 128a96 96 0 00-96 96v32h-16a16 16 0 00-16 16v96a16 16 0 0016 16h224a16 16 0 0016-16v-96a16 16 0 00-16-16h-16v-32a96 96 0 00-96-96zm0 32c35.3 0 64 28.7 64 64v32H192v-32c0-35.3 28.7-64 64-64zm0 192a32 32 0 100-64 32 32 0 000 64z' fill='white'/%3E%3C/svg%3E",
+        "sizes": "512x512",
+        "type": "image/svg+xml",
+        "purpose": "any maskable"
+        }
+    ]
+    }
+    </script>
+    <title>Lemonade</title>
+    <style>
+        /* CSS with dark/light mode support */
+        :root {
+            --bg-color: #ffffff;
+            --text-color: #000000;
+            --card-bg: #ffffff;
+            --accent-color: #000000;
+            --border-color: #dddddd;
+            --input-bg: #ffffff;
+            --button-bg: #000000;
+            --button-text: #ffffff;
+            --button-hover: #333333;
+            --success-color: #00cc66;
+            --error-color: #cc3300;
+            --warning-color: #f0ad4e;
+            --cyber-line: rgba(0, 0, 0, 0.15);
+            --cyber-glow: rgba(0, 0, 0, 0.4);
+            --security-high: #00cc66;
+            --security-medium: #f0ad4e;
+            --security-low: #cc3300;
+        }
+        
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-color: #000000;
+                --text-color: #ffffff;
+                --card-bg: #121212;
+                --accent-color: #FFFF00; /* Neon Yellow */
+                --border-color: #333333;
+                --input-bg: #1a1a1a;
+                --button-bg: #00FFFF; /* Neon Teal */
+                --button-text: #000000;
+                --button-hover: #FF00FF; /* Neon Purple */
+                --success-color: #39FF14; /* Neon Green */
+                --error-color: #FF3131; /* Neon Red */
+                --warning-color: #FFFF00; /* Neon Yellow */
+                --cyber-line: rgba(0, 255, 255, 0.2); /* Neon Teal */
+                --cyber-glow: rgba(255, 0, 255, 0.3); /* Neon Purple */
+                --security-high: #39FF14; /* Neon Green */
+                --security-medium: #FFFF00; /* Neon Yellow */
+                --security-low: #FF3131; /* Neon Red */
+            }
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 0;
+            transition: background-color 0.3s, color 0.3s;
+            line-height: 1.6;
+            position: relative;
+            overflow-x: hidden;
+        }
+        
+        body::before {
+            display: none;
+        }
+        
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .app-header {
+            text-align: center;
+            margin-bottom: 20px;
+            position: relative;
+        }
+        
+        .app-title {
+            font-size: 1.8rem;
+            margin: 0;
+            background: linear-gradient(90deg, #33aaff, #0066cc);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-shadow: 0 0 15px var(--cyber-glow);
+        }
+        
+        .app-header::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--accent-color), transparent);
+        }
+        
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border-color);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, #33aaff, #0066cc);
+        }
+        
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .tab-btn {
+            background: none;
+            border: none;
+            padding: 10px 20px;
+            font-size: 1rem;
+            cursor: pointer;
+            color: var(--text-color);
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .tab-btn.active {
+            border-bottom: 2px solid var(--accent-color);
+            color: var(--accent-color);
+        }
+        
+        .tab-btn::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background-color: var(--accent-color);
+            transition: width 0.3s;
+        }
+        
+        .tab-btn:hover::after {
+            width: 100%;
+        }
+        
+        .tab-content {
+            display: none !important;
+        }
+        
+        .tab-content.active {
+            display: block !important;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+        
+        input, textarea, select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background-color: var(--input-bg);
+            color: var(--text-color);
+            font-size: 1rem;
+            box-sizing: border-box;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 2px var(--cyber-glow);
+        }
+        
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        button {
+            background-color: var(--button-bg);
+            color: var(--button-text);
+            border: none;
+            border-radius: 8px;
+            padding: 12px 20px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.1s;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        button:hover {
+            background-color: var(--button-hover);
+        }
+        
+        button:active {
+            transform: scale(0.98);
+        }
+        
+        button::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 5px;
+            height: 5px;
+            background: rgba(255, 255, 255, 0.5);
+            opacity: 0;
+            border-radius: 100%;
+            transform: scale(1, 1) translate(-50%);
+            transform-origin: 50% 50%;
+        }
+        
+        button:focus:not(:active)::after {
+            animation: ripple 1s ease-out;
+        }
+        
+        @keyframes ripple {
+            0% { transform: scale(0, 0); opacity: 0.5; }
+            100% { transform: scale(20, 20); opacity: 0; }
+        }
+        
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .btn-secondary {
+            background-color: transparent;
+            border: 1px solid var(--accent-color);
+            color: var(--accent-color);
+        }
+        
+        .btn-secondary:hover {
+            background-color: rgba(51, 170, 255, 0.1);
+        }
+        
+        .status {
+            padding: 10px;
+            border-radius: 8px;
+            margin-top: 15px;
+            display: none;
+        }
+        
+        .status.success {
+            background-color: rgba(0, 204, 102, 0.1);
+            color: var(--success-color);
+            border: 1px solid var(--success-color);
+            display: block;
+        }
+        
+        .status.warning {
+            background-color: rgba(240, 173, 78, 0.1);
+            color: var(--warning-color);
+            border: 1px solid var(--warning-color);
+            display: block;
+        }
+        
+        .status.error {
+            background-color: rgba(204, 51, 0, 0.1);
+            color: var(--error-color);
+            border: 1px solid var(--error-color);
+            display: block;
+        }
+        
+        .key-item {
+            background-color: var(--input-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+            position: relative;
+        }
+        
+        .key-item h3 {
+            margin-top: 0;
+            margin-bottom: 10px;
+        }
+        
+        .key-actions {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+        }
+        
+        .key-meta {
+            font-size: 0.9rem;
+            color: #888;
+            margin-bottom: 5px;
+        }
+        
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            display: none;
+        }
+        
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: var(--accent-color);
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .password-strength {
+            height: 5px;
+            border-radius: 5px;
+            margin-top: 5px;
+            transition: all 0.3s;
+        }
+        
+        .password-strength.weak {
+            background-color: var(--security-low);
+            width: 30%;
+        }
+        
+        .password-strength.medium {
+            background-color: var(--security-medium);
+            width: 60%;
+        }
+        
+        .password-strength.strong {
+            background-color: var(--security-high);
+            width: 100%;
+        }
+        
+        .password-feedback {
+            font-size: 0.8rem;
+            margin-top: 5px;
+        }
+        
+        .security-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            margin-left: 8px;
+            font-weight: bold;
+        }
+        
+        .security-badge.high {
+            background-color: rgba(0, 204, 102, 0.1);
+            color: var(--security-high);
+            border: 1px solid var(--security-high);
+        }
+        
+        .security-badge.medium {
+            background-color: rgba(240, 173, 78, 0.1);
+            color: var(--security-medium);
+            border: 1px solid var(--security-medium);
+        }
+        
+        .security-badge.low {
+            background-color: rgba(204, 51, 0, 0.1);
+            color: var(--security-low);
+            border: 1px solid var(--security-low);
+        }
+        
+        .config-toggle {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .config-toggle label {
+            display: inline;
+            margin-bottom: 0;
+        }
+        
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+        
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 24px;
+        }
+        
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .slider {
+            background-color: var(--accent-color);
+        }
+        
+        input:focus + .slider {
+            box-shadow: 0 0 1px var(--accent-color);
+        }
+        
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+        
+        .security-info {
+            font-size: 0.9rem;
+            padding: 10px;
+            border-left: 3px solid var(--accent-color);
+            background-color: rgba(51, 170, 255, 0.05);
+            margin-bottom: 15px;
+        }
+        
+        .key-expiry {
+            font-size: 0.8rem;
+            color: var(--warning-color);
+            margin-top: 5px;
+            font-style: italic;
+        }
+        
+        #inactivityModal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            z-index: 1001;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background-color: var(--card-bg);
+            padding: 20px;
+            border-radius: 12px;
+            max-width: 400px;
+            text-align: center;
+        }
+        
+        .timer {
+            font-size: 2rem;
+            margin: 20px 0;
+            color: var(--warning-color);
+        }
+        
+        /* Additional settings section */
+        #settings {
+            display: none;
+        }
+        
+        .settings-section {
+            margin-bottom: 20px;
+        }
+        
+        .settings-section h3 {
+            margin-top: 0;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 5px;
+        }
+        
+        @media (max-width: 600px) {
+            .container {
+                padding: 15px;
+            }
+            
+            .card {
+                padding: 15px;
+            }
+            
+            .app-title {
+                font-size: 1.5rem;
+            }
+            
+            .btn-group {
+                flex-direction: column;
+            }
+            
+            button {
+                width: 100%;
+            }
+            
+            .tab-btn {
+                padding: 10px 15px;
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="app-header">
+            <h1 class="app-title">Lemonade</h1>
+            <p>Secure Message Encryption & Decryption</p>
+        </div>
+        
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="encrypt">Encrypt</button>
+            <button class="tab-btn" data-tab="decrypt">Decrypt</button>
+            <button class="tab-btn" data-tab="keys">Key Management</button>
+            <button class="tab-btn" data-tab="settings">Settings</button>
+        </div>
+        
+        <div class="tab-content active" id="encrypt">
+            <div class="card">
+                <div class="form-group">
+                    <label for="encryptMessage">Message to Encrypt</label>
+                    <textarea id="encryptMessage" placeholder="Type your message here..."></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="encryptionKey">Encryption Key</label>
+                    <select id="encryptionKey">
+                        <option value="">Select a key...</option>
+                    </select>
+                </div>
+                
+                <div class="form-group" id="encryptionPasswordGroup" style="display: none;">
+                    <label for="encryptionPassword">Key Password</label>
+                    <input type="password" id="encryptionPassword" placeholder="Enter key password">
+                </div>
+                
+                <button id="encryptBtn">Encrypt Message</button>
+                
+                <div class="form-group" style="margin-top: 20px;">
+                    <label for="encryptedOutput">Encrypted Message</label>
+                    <textarea id="encryptedOutput" readonly></textarea>
+                </div>
+                
+                <div class="btn-group">
+                    <button id="copyEncryptedBtn" class="btn-secondary">Copy to Clipboard</button>
+                    <button id="clearEncryptBtn" class="btn-secondary">Clear All</button>
+                </div>
+                
+                <div id="encryptStatus" class="status"></div>
+            </div>
+        </div>
+        
+        <div class="tab-content" id="decrypt">
+            <div class="card">
+                <div class="form-group">
+                    <label for="encryptedMessage">Encrypted Message</label>
+                    <textarea id="encryptedMessage" placeholder="Paste the encrypted message here..."></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="decryptionKey">Decryption Key</label>
+                    <select id="decryptionKey">
+                        <option value="">Select a key...</option>
+                    </select>
+                </div>
+                
+                <div class="form-group" id="decryptionPasswordGroup" style="display: none;">
+                    <label for="decryptionPassword">Key Password</label>
+                    <input type="password" id="decryptionPassword" placeholder="Enter key password">
+                </div>
+                
+                <button id="decryptBtn">Decrypt Message</button>
+                
+                <div class="form-group" style="margin-top: 20px;">
+                    <label for="decryptedOutput">Decrypted Message</label>
+                    <textarea id="decryptedOutput" readonly></textarea>
+                </div>
+                
+                <div class="btn-group">
+                    <button id="copyDecryptedBtn" class="btn-secondary">Copy to Clipboard</button>
+                    <button id="clearDecryptBtn" class="btn-secondary">Clear All</button>
+                </div>
+                
+                <div id="decryptStatus" class="status"></div>
+            </div>
+        </div>
+        
+        <div class="tab-content" id="keys">
+            <div class="card">
+                <h2>Key Management</h2>
+                
+                <div class="security-info">
+                    <strong>Security Note:</strong> All keys are stored locally in your browser's protected storage and never sent to any server. It's recommended to use password protection for important keys.
+                </div>
+                
+                <div class="form-group">
+                    <label for="keyName">Key Name</label>
+                    <input type="text" id="keyName" placeholder="e.g., insert descriptor here.">
+                </div>
+                
+                <div class="form-group">
+                    <label for="keyType">Key Type</label>
+                    <select id="keyType">
+                        <option value="aes">AES-GCM (Symmetric) - 256 bits</option>
+                        <option value="rsa">RSA-OAEP (Asymmetric) - 2048 bits</option>
+                        <option value="rsa-4096">RSA-OAEP (Asymmetric) - 4096 bits</option>
+                        <option value="ecc">ECC (Asymmetric) - P-256</option>
+                        <option value="ecc-p384">ECC (Asymmetric) - P-384</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="keyExpiry">Key Expiration (Optional)</label>
+                    <select id="keyExpiry">
+                        <option value="">Never (Not Recommended)</option>
+                        <option value="30">30 Days</option>
+                        <option value="90">90 Days</option>
+                        <option value="180">180 Days</option>
+                        <option value="365">1 Year</option>
+                    </select>
+                </div>
+                
+                <div class="form-group" id="keyPasswordGroup">
+                    <label for="keyPassword">Key Password (Recommended)</label>
+                    <input type="password" id="keyPassword" placeholder="Enter a password">
+                    <div id="passwordStrength" class="password-strength"></div>
+                    <div id="passwordFeedback" class="password-feedback"></div>
+                </div>
+                
+                <div class="form-group" id="confirmKeyPasswordGroup">
+                    <label for="confirmKeyPassword">Confirm Password</label>
+                    <input type="password" id="confirmKeyPassword" placeholder="Confirm your password">
+                </div>
+                
+                <button id="generateKeyBtn">Generate New Key</button>
+                
+                <div style="margin-top: 30px;">
+                    <h3>Your Keys</h3>
+                    <div id="keysList">
+                        <!-- Keys will be populated here -->
+                    </div>
+                </div>
+                
+                <div class="btn-group">
+                    <button id="importKeyBtn" class="btn-secondary">Import Key</button>
+                    <button id="exportAllKeysBtn" class="btn-secondary">Export All Keys</button>
+                </div>
+                
+                <div id="keyStatus" class="status"></div>
+            </div>
+        </div>
+        
+        <div class="tab-content" id="settings">
+            <div class="card">
+                <h2>Security Settings</h2>
+                
+                <div class="settings-section">
+                    <h3>Storage Options</h3>
+                    
+                    <div class="config-toggle">
+                        <label for="useIndexedDB">Use IndexedDB for key storage (more secure)</label>
+                        <label class="switch">
+                            <input type="checkbox" id="useIndexedDB" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    
+                    <div class="config-toggle">
+                        <label for="sessionOnly">Session-only mode (keys aren't saved when browser closes)</label>
+                        <label class="switch">
+                            <input type="checkbox" id="sessionOnly">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="settings-section">
+                    <h3>Security Parameters</h3>
+                    
+                    <div class="config-toggle">
+                        <label for="enforcePwdProtection">Enforce password protection for keys</label>
+                        <label class="switch">
+                            <input type="checkbox" id="enforcePwdProtection">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    
+                    <div class="config-toggle">
+                        <label for="enforceKeyExpiry">Enforce key expiration</label>
+                        <label class="switch">
+                            <input type="checkbox" id="enforceKeyExpiry">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="pbkdf2Iterations">PBKDF2 Iterations (higher = more secure but slower)</label>
+                        <select id="pbkdf2Iterations">
+                            <option value="100000">100,000 (Default)</option>
+                            <option value="200000">200,000</option>
+                            <option value="300000">300,000</option>
+                            <option value="500000">500,000</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="settings-section">
+                    <h3>Auto-Timeout</h3>
+                    
+                    <div class="config-toggle">
+                        <label for="enableInactivityTimeout">Enable inactivity timeout</label>
+                        <label class="switch">
+                            <input type="checkbox" id="enableInactivityTimeout" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="inactivityTimeout">Timeout after inactivity (seconds)</label>
+                        <select id="inactivityTimeout">
+                            <option value="60">1 minute</option>
+                            <option value="180">3 minutes</option>
+                            <option value="300" selected>5 minutes</option>
+                            <option value="600">10 minutes</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="settings-section">
+                    <h3>Data Protection</h3>
+                    
+                    <div class="config-toggle">
+                        <label for="clearClipboard">Auto-clear clipboard after copying sensitive data</label>
+                        <label class="switch">
+                            <input type="checkbox" id="clearClipboard" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="clearClipboardDelay">Clear clipboard after (seconds)</label>
+                        <select id="clearClipboardDelay">
+                            <option value="10">10 seconds</option>
+                            <option value="30" selected>30 seconds</option>
+                            <option value="60">1 minute</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <h3>Progressive Web App</h3>
+                    
+                    <div class="form-group">
+                        <p>Lemonade can be installed as an app on your device for offline use.</p>
+                        <button id="checkUpdatesBtn" class="btn-secondary">Install/Update</button>
+                    </div>
+                    
+                    <div id="pwaStatus" class="status"></div>
+                </div>
+                
+                <div class="btn-group">
+                    <button id="saveSettingsBtn">Save Settings</button>
+                    <button id="resetSettingsBtn" class="btn-secondary">Reset to Defaults</button>
+                </div>
+                
+                <div id="settingsStatus" class="status"></div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+    </div>
+    
+    <div id="inactivityModal">
+        <div class="modal-content">
+            <h2>Session Timeout</h2>
+            <p>For security, your session will be locked due to inactivity in</p>
+            <div id="timeoutTimer" class="timer">30</div>
+            <button id="continueSessionBtn">Continue Session</button>
+        </div>
+    </div>
+    
+    <script>
+        // Secure Constants with proper bits for each algorithm
+        const PBKDF2_CONFIG = {
+            ITERATIONS: 100000,
+            HASH: "SHA-256"
+        };
+        const AES_CONFIG = {
+            KEY_LENGTH: 256,
+            MODE: "AES-GCM",
+            IV_LENGTH: 12, // bytes
+            TAG_LENGTH: 128 // bits
+        };
+        const RSA_CONFIG = {
+            KEY_SIZE: 2048,
+            KEY_SIZE_4096: 4096,
+            ALGORITHM: "RSA-OAEP",
+            HASH: "SHA-256"
+        };
+        const ECC_CONFIG = {
+            CURVE: "P-256",
+            CURVE_P384: "P-384",
+            ALGORITHM: "ECDH",
+            KEY_DERIVATION: "HKDF",
+            KDF_HASH: "SHA-256",
+            ENC_ALGORITHM: "AES-GCM"
+        };
+        
+        // DB Constants
+        const DB_NAME = "LemonadeSecureDB";
+        const DB_VERSION = 1;
+        const KEYS_STORE = "keys";
+        const SETTINGS_STORE = "settings";
+        
+        // Security settings default values
+        const DEFAULT_SETTINGS = {
+            useIndexedDB: true,
+            sessionOnly: false,
+            enforcePwdProtection: false,
+            enforceKeyExpiry: false,
+            pbkdf2Iterations: 100000,
+            enableInactivityTimeout: true,
+            inactivityTimeout: 300, // seconds
+            clearClipboard: true,
+            clearClipboardDelay: 30 // seconds
+        };
+        
+        // Global variables
+        let db = null;
+        let keys = [];
+        let appSettings = { ...DEFAULT_SETTINGS };
+        let inactivityTimer = null;
+        let inactivityTimeout = null;
+        let clipboardClearTimer = null;
+        
+        // Elements
+        const tabBtns = document.querySelectorAll('.tab-btn');
+        const tabContents = document.querySelectorAll('.tab-content');
+        const encryptionKeySelect = document.getElementById('encryptionKey');
+        const decryptionKeySelect = document.getElementById('decryptionKey');
+        const keysList = document.getElementById('keysList');
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const inactivityModal = document.getElementById('inactivityModal');
+        const timeoutTimer = document.getElementById('timeoutTimer');
+        
+        // Memory protection and content validation utilities
+        const safeMemory = {
+            // Create a WeakMap to store sensitive data with automatic garbage collection
+            sensitiveData: new WeakMap(),
+            
+            // Store sensitive data with a random key
+            store: function(data) {
+                const secureKey = { id: crypto.randomUUID() };
+                this.sensitiveData.set(secureKey, data);
+                return secureKey;
+            },
+            
+            // Retrieve and optionally delete sensitive data
+            retrieve: function(secureKey, deleteAfter = false) {
+                if (!this.sensitiveData.has(secureKey)) return null;
+                
+                const data = this.sensitiveData.get(secureKey);
+                
+                if (deleteAfter) {
+                    this.sensitiveData.delete(secureKey);
+                }
+                
+                return data;
+            },
+            
+            // Explicitly delete sensitive data
+            delete: function(secureKey) {
+                if (this.sensitiveData.has(secureKey)) {
+                    this.sensitiveData.delete(secureKey);
+                    return true;
+                }
+                return false;
+            },
+            
+            // Securely clear all sensitive data
+            clearAll: function() {
+                this.sensitiveData = new WeakMap();
+                // Force garbage collection if possible (not guaranteed)
+                if (typeof window.gc === 'function') {
+                    try {
+                        window.gc();
+                    } catch (e) {
+                        console.log('Manual garbage collection not available');
+                    }
+                }
+            }
+        };
+        
+        const validator = {
+            sanitizeHTML: function(text) {
+                const element = document.createElement('div');
+                element.textContent = text;
+                return element.innerHTML;
+            },
+            
+            validateInput: function(input, allowHTML = false) {
+                // Reject null or undefined
+                if (input === null || input === undefined) return '';
+                
+                // Convert to string if not already
+                const str = String(input);
+                
+                // Return sanitized or raw based on allowHTML
+                return allowHTML ? str : this.sanitizeHTML(str);
+            },
+            
+            isValidKeyName: function(name) {
+                return /^[A-Za-z0-9 ._-]{1,50}$/.test(name);
+            },
+            
+            isValidEncryptedMessage: function(message) {
+                return /^--LM--\s*[A-Za-z0-9+/=]+\s*--ZM--$/s.test(message);
+            },
+            
+            measurePasswordStrength: function(password) {
+                // Default score is 0 (weak)
+                let score = 0;
+                
+                // Skip empty passwords
+                if (!password) return { score: 0, feedback: "Password is required" };
+                
+                // Check length (up to 5 points)
+                const length = password.length;
+                score += Math.min(5, Math.floor(length / 4));
+                
+                // Check complexity (up to 5 more points)
+                if (/[a-z]/.test(password)) score += 1; // Has lowercase
+                if (/[A-Z]/.test(password)) score += 1; // Has uppercase
+                if (/[0-9]/.test(password)) score += 1; // Has number
+                if (/[^A-Za-z0-9]/.test(password)) score += 2; // Has special char
+                
+                // Check for common patterns (subtract points)
+                if (/^[a-zA-Z]+$/.test(password)) score -= 1; // Letters only
+                if (/^[0-9]+$/.test(password)) score -= 1; // Numbers only
+                if (/(.)\1{2,}/.test(password)) score -= 1; // Repeated characters
+                
+                // Get strength category and feedback
+                let strengthCategory, feedback;
+                
+                if (score < 4) {
+                    strengthCategory = "weak";
+                    feedback = "Weak - Use a longer password with numbers and special characters";
+                } else if (score < 8) {
+                    strengthCategory = "medium";
+                    feedback = "Medium - Add more variety or length for better security";
+                } else {
+                    strengthCategory = "strong";
+                    feedback = "Strong - Good password!";
+                }
+                
+                return { score, strengthCategory, feedback };
+            }
+        };
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Set up tabs - Using direct event binding for more reliable tab switching
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const tabId = btn.getAttribute('data-tab');
+                    console.log('Tab button clicked:', tabId);
+                    switchTab(tabId);
+                });
+            document.getElementById('checkUpdatesBtn').addEventListener('click', checkForPWAUpdates);
+            });
+            
+            // Set up database
+            await initDatabase();
+            
+            // Load saved settings
+            await loadSettings();
+            
+            // Initialize UI based on settings
+            initSettingsUI();
+            
+            // Load stored keys
+            await loadKeys();
+            
+            // Set up password strength meter
+            document.getElementById('keyPassword').addEventListener('input', updatePasswordStrength);
+            
+            // Set up event listeners
+            document.getElementById('encryptBtn').addEventListener('click', encryptMessage);
+            document.getElementById('decryptBtn').addEventListener('click', decryptMessage);
+            document.getElementById('generateKeyBtn').addEventListener('click', generateKey);
+            document.getElementById('copyEncryptedBtn').addEventListener('click', () => copyToClipboard('encryptedOutput', 'encryptStatus'));
+            document.getElementById('copyDecryptedBtn').addEventListener('click', () => copyToClipboard('decryptedOutput', 'decryptStatus'));
+            document.getElementById('clearEncryptBtn').addEventListener('click', () => {
+                document.getElementById('encryptMessage').value = '';
+                document.getElementById('encryptedOutput').value = '';
+                document.getElementById('encryptStatus').className = 'status';
+                document.getElementById('encryptStatus').textContent = '';
+            });
+            document.getElementById('clearDecryptBtn').addEventListener('click', () => {
+                document.getElementById('encryptedMessage').value = '';
+                document.getElementById('decryptedOutput').value = '';
+                document.getElementById('decryptStatus').className = 'status';
+                document.getElementById('decryptStatus').textContent = '';
+            });
+            document.getElementById('importKeyBtn').addEventListener('click', importKey);
+            document.getElementById('exportAllKeysBtn').addEventListener('click', exportAllKeys);
+            document.getElementById('saveSettingsBtn').addEventListener('click', saveSettings);
+            document.getElementById('resetSettingsBtn').addEventListener('click', resetSettings);
+            document.getElementById('continueSessionBtn').addEventListener('click', continueSession);
+            
+            // Key select changes
+            encryptionKeySelect.addEventListener('change', handleEncryptionKeyChange);
+            decryptionKeySelect.addEventListener('change', handleDecryptionKeyChange);
+            
+            // Setup inactivity detection if enabled
+            setupInactivityDetection();
+            
+            // Listen for user activity
+            ['click', 'mousemove', 'keydown', 'touchstart'].forEach(eventType => {
+                document.addEventListener(eventType, resetInactivityTimer);
+            });
+        });
+        
+        // Database Initialization
+        async function initDatabase() {
+            if (!window.indexedDB) {
+                showStatus('keyStatus', 'Your browser doesn\'t support secure storage. Using less secure localStorage instead.', 'warning');
+                appSettings.useIndexedDB = false;
+                return;
+            }
+            
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(DB_NAME, DB_VERSION);
+                
+                request.onupgradeneeded = function(event) {
+                    const db = event.target.result;
+                    
+                    // Create object stores if they don't exist
+                    if (!db.objectStoreNames.contains(KEYS_STORE)) {
+                        db.createObjectStore(KEYS_STORE, { keyPath: 'id' });
+                    }
+                    
+                    if (!db.objectStoreNames.contains(SETTINGS_STORE)) {
+                        db.createObjectStore(SETTINGS_STORE, { keyPath: 'id' });
+                    }
+                };
+                
+                request.onsuccess = function(event) {
+                    db = event.target.result;
+                    console.log('Database initialized successfully');
+                    resolve();
+                };
+                
+                request.onerror = function(event) {
+                    console.error('Database error:', event.target.error);
+                    showStatus('keyStatus', 'Database initialization failed. Using less secure localStorage instead.', 'warning');
+                    appSettings.useIndexedDB = false;
+                    resolve(); // Still resolve to continue app initialization
+                };
+            });
+        }
+        
+        // Tab switching
+        function switchTab(tabId) {
+            console.log('Switching to tab:', tabId);
+            
+            // Update tab buttons
+            tabBtns.forEach(btn => {
+                if (btn.getAttribute('data-tab') === tabId) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+            
+            // Directly access each tab content by ID to ensure all tabs are handled
+            document.getElementById('encrypt').classList.remove('active');
+            document.getElementById('decrypt').classList.remove('active');
+            document.getElementById('keys').classList.remove('active');
+            document.getElementById('settings').classList.remove('active');
+            
+            // Set the selected tab to active
+            document.getElementById(tabId).classList.add('active');
+        }
+        
+        // Show/hide loading overlay
+        function setLoading(isLoading) {
+            loadingOverlay.style.display = isLoading ? 'flex' : 'none';
+        }
+        
+        // Settings Management
+        async function loadSettings() {
+            if (appSettings.useIndexedDB && db) {
+                try {
+                    const settings = await getFromDatabase(SETTINGS_STORE, 'app-settings');
+                    if (settings) {
+                        appSettings = { ...DEFAULT_SETTINGS, ...settings };
+                    }
+                } catch (error) {
+                    console.error('Error loading settings from database:', error);
+                    // Fall back to localStorage
+                    try {
+                        const storedSettings = localStorage.getItem('LemonadeSettings');
+                        if (storedSettings) {
+                            appSettings = { ...DEFAULT_SETTINGS, ...JSON.parse(storedSettings) };
+                        }
+                    } catch (localStorageError) {
+                        console.error('Error loading settings from localStorage:', localStorageError);
+                    }
+                }
+            } else {
+                // Use localStorage
+                try {
+                    const storedSettings = localStorage.getItem('LemonadeSettings');
+                    if (storedSettings) {
+                        appSettings = { ...DEFAULT_SETTINGS, ...JSON.parse(storedSettings) };
+                    }
+                } catch (error) {
+                    console.error('Error loading settings from localStorage:', error);
+                }
+            }
+            
+            // Update PBKDF2 iterations from settings
+            PBKDF2_CONFIG.ITERATIONS = appSettings.pbkdf2Iterations;
+            
+            return appSettings;
+        }
+
+        async function checkForPWAUpdates() {
+            if ('serviceWorker' in navigator) {
+                try {
+                    const registration = await navigator.serviceWorker.getRegistration();
+                    if (registration) {
+                        await registration.update();
+                        showStatus('pwaStatus', 'App updated to the latest version', 'success');
+                    } else {
+                        showStatus('pwaStatus', 'No service worker registered', 'warning');
+                    }
+                } catch (error) {
+                    console.error('Update check failed:', error);
+                    showStatus('pwaStatus', 'Update check failed: ' + error.message, 'error');
+                }
+            } else {
+                showStatus('pwaStatus', 'Service workers not supported in this browser', 'warning');
+            }
+        }
+        
+        function initSettingsUI() {
+            // Set UI elements based on loaded settings
+            document.getElementById('useIndexedDB').checked = appSettings.useIndexedDB;
+            document.getElementById('sessionOnly').checked = appSettings.sessionOnly;
+            document.getElementById('enforcePwdProtection').checked = appSettings.enforcePwdProtection;
+            document.getElementById('enforceKeyExpiry').checked = appSettings.enforceKeyExpiry;
+            document.getElementById('pbkdf2Iterations').value = appSettings.pbkdf2Iterations;
+            document.getElementById('enableInactivityTimeout').checked = appSettings.enableInactivityTimeout;
+            document.getElementById('inactivityTimeout').value = appSettings.inactivityTimeout;
+            document.getElementById('clearClipboard').checked = appSettings.clearClipboard;
+            document.getElementById('clearClipboardDelay').value = appSettings.clearClipboardDelay;
+        }
+        
+        async function saveSettings() {
+            try {
+                // Get values from UI
+                appSettings.useIndexedDB = document.getElementById('useIndexedDB').checked;
+                appSettings.sessionOnly = document.getElementById('sessionOnly').checked;
+                appSettings.enforcePwdProtection = document.getElementById('enforcePwdProtection').checked;
+                appSettings.enforceKeyExpiry = document.getElementById('enforceKeyExpiry').checked;
+                appSettings.pbkdf2Iterations = parseInt(document.getElementById('pbkdf2Iterations').value);
+                appSettings.enableInactivityTimeout = document.getElementById('enableInactivityTimeout').checked;
+                appSettings.inactivityTimeout = parseInt(document.getElementById('inactivityTimeout').value);
+                appSettings.clearClipboard = document.getElementById('clearClipboard').checked;
+                appSettings.clearClipboardDelay = parseInt(document.getElementById('clearClipboardDelay').value);
+                
+                // Update PBKDF2 iterations
+                PBKDF2_CONFIG.ITERATIONS = appSettings.pbkdf2Iterations;
+                
+                // Save settings to database or localStorage
+                if (appSettings.useIndexedDB && db) {
+                    await saveToDatabase(SETTINGS_STORE, { id: 'app-settings', ...appSettings });
+                } else {
+                    localStorage.setItem('LemonadeSettings', JSON.stringify(appSettings));
+                }
+                
+                // Reconfigure inactivity detection based on new settings
+                setupInactivityDetection();
+                
+                showStatus('settingsStatus', 'Settings saved successfully', 'success');
+            } catch (error) {
+                console.error('Error saving settings:', error);
+                showStatus('settingsStatus', 'Error saving settings: ' + error.message, 'error');
+            }
+        }
+        
+        function resetSettings() {
+            const confirmReset = confirm('Are you sure you want to reset all settings to defaults?');
+            if (!confirmReset) return;
+            
+            appSettings = { ...DEFAULT_SETTINGS };
+            initSettingsUI();
+            saveSettings();
+        }
+        
+        // Inactivity detection
+        function setupInactivityDetection() {
+            // Clear any existing timers
+            if (inactivityTimer) clearTimeout(inactivityTimer);
+            if (inactivityTimeout) clearTimeout(inactivityTimeout);
+            
+            // Setup new timer if enabled
+            if (appSettings.enableInactivityTimeout) {
+                resetInactivityTimer();
+            }
+        }
+        
+        function resetInactivityTimer() {
+            if (!appSettings.enableInactivityTimeout) return;
+            
+            // Clear existing timers
+            if (inactivityTimer) clearTimeout(inactivityTimer);
+            if (inactivityTimeout) clearTimeout(inactivityTimeout);
+            
+            // Set new timer
+            inactivityTimer = setTimeout(() => {
+                showInactivityWarning();
+            }, appSettings.inactivityTimeout * 1000);
+        }
+        
+        function showInactivityWarning() {
+            // Show modal
+            inactivityModal.style.display = 'flex';
+            
+            // Start countdown (30 seconds)
+            let timeLeft = 30;
+            timeoutTimer.textContent = timeLeft;
+            
+            const countDown = () => {
+                timeLeft--;
+                timeoutTimer.textContent = timeLeft;
+                
+                if (timeLeft <= 0) {
+                    // Lock session
+                    lockSession();
+                }
+            };
+            
+            inactivityTimeout = setInterval(countDown, 1000);
+        }
+        
+        function continueSession() {
+            // Hide modal
+            inactivityModal.style.display = 'none';
+            
+            // Clear timeout
+            if (inactivityTimeout) {
+                clearInterval(inactivityTimeout);
+                inactivityTimeout = null;
+            }
+            
+            // Reset timer
+            resetInactivityTimer();
+        }
+        
+        function lockSession() {
+            // Clear sensitive data
+            document.getElementById('encryptMessage').value = '';
+            document.getElementById('encryptedOutput').value = '';
+            document.getElementById('encryptedMessage').value = '';
+            document.getElementById('decryptedOutput').value = '';
+            document.getElementById('keyPassword').value = '';
+            document.getElementById('confirmKeyPassword').value = '';
+            document.getElementById('encryptionPassword').value = '';
+            document.getElementById('decryptionPassword').value = '';
+            
+            // Clear any in-memory sensitive data
+            safeMemory.clearAll();
+            
+            // Hide modal
+            inactivityModal.style.display = 'none';
+            
+            // Clear timeout
+            if (inactivityTimeout) {
+                clearInterval(inactivityTimeout);
+                inactivityTimeout = null;
+            }
+            
+            // Show locked notification
+            showStatus('encryptStatus', 'Session locked due to inactivity. Sensitive data has been cleared.', 'warning');
+            showStatus('decryptStatus', 'Session locked due to inactivity. Sensitive data has been cleared.', 'warning');
+            
+            // Switch to encrypt tab
+            switchTab('encrypt');
+            
+            // Reset timer for next inactivity
+            resetInactivityTimer();
+        }
+        
+        // Password strength meter
+        function updatePasswordStrength() {
+            const password = document.getElementById('keyPassword').value;
+            const strength = validator.measurePasswordStrength(password);
+            
+            const strengthElement = document.getElementById('passwordStrength');
+            const feedbackElement = document.getElementById('passwordFeedback');
+            
+            // Clear existing classes
+            strengthElement.className = 'password-strength';
+            
+            if (password) {
+                // Add class based on strength
+                strengthElement.classList.add(strength.strengthCategory);
+                
+                // Update feedback
+                feedbackElement.textContent = strength.feedback;
+            } else {
+                feedbackElement.textContent = '';
+            }
+        }
+        
+        // Key Management Functions
+        async function loadKeys() {
+            try {
+                // Clear existing keys
+                keys = [];
+                
+                if (appSettings.useIndexedDB && db) {
+                    // Load from IndexedDB
+                    const storedKeys = await getAllFromDatabase(KEYS_STORE);
+                    if (storedKeys && storedKeys.length > 0) {
+                        keys = storedKeys;
+                    }
+                } else {
+                    // Load from localStorage
+                    const storedKeys = localStorage.getItem('LemonadeKeys');
+                    if (storedKeys) {
+                        keys = JSON.parse(storedKeys);
+                    }
+                }
+                
+                // Check for expired keys and update UI
+                checkExpiredKeys();
+                updateKeysList();
+                updateKeySelects();
+            } catch (error) {
+                console.error('Error loading keys:', error);
+                showStatus('keyStatus', 'Error loading keys: ' + error.message, 'error');
+            }
+        }
+        
+        async function saveKeys() {
+            try {
+                if (appSettings.sessionOnly) {
+                    // In session-only mode, we keep keys in memory but don't persist them
+                    console.log('Session-only mode: Keys not saved persistently');
+                } else if (appSettings.useIndexedDB && db) {
+                    // Save to IndexedDB - first clear the store
+                    await clearDatabase(KEYS_STORE);
+                    
+                    // Then add all keys
+                    for (const keyData of keys) {
+                        await saveToDatabase(KEYS_STORE, keyData);
+                    }
+                } else {
+                    // Save to localStorage
+                    localStorage.setItem('LemonadeKeys', JSON.stringify(keys));
+                }
+                
+                // Update UI
+                updateKeysList();
+                updateKeySelects();
+            } catch (error) {
+                console.error('Error saving keys:', error);
+                showStatus('keyStatus', 'Error saving keys: ' + error.message, 'error');
+            }
+        }
+        
+        function checkExpiredKeys() {
+            const now = new Date();
+            const expiredKeyIds = [];
+            
+            // Check each key for expiration
+            keys.forEach(keyData => {
+                if (keyData.expiry) {
+                    const expiryDate = new Date(keyData.expiry);
+                    if (expiryDate < now) {
+                        expiredKeyIds.push(keyData.id);
+                    }
+                }
+            });
+            
+            // Remove expired keys
+            if (expiredKeyIds.length > 0) {
+                keys = keys.filter(key => !expiredKeyIds.includes(key.id));
+                saveKeys();
+                showStatus('keyStatus', `${expiredKeyIds.length} expired key(s) removed for security`, 'warning');
+            }
+        }
+        
+        async function generateKey() {
+            try {
+                setLoading(true);
+                
+                const keyName = document.getElementById('keyName').value.trim();
+                const keyType = document.getElementById('keyType').value;
+                const keyPassword = document.getElementById('keyPassword').value;
+                const confirmKeyPassword = document.getElementById('confirmKeyPassword').value;
+                const keyExpiry = document.getElementById('keyExpiry').value;
+                
+                // Validate key name
+                if (!keyName) {
+                    showStatus('keyStatus', 'Please enter a key name', 'error');
+                    return;
+                }
+                
+                if (!validator.isValidKeyName(keyName)) {
+                    showStatus('keyStatus', 'Key name can only contain letters, numbers, spaces, and basic punctuation (._-)', 'error');
+                    return;
+                }
+                
+                // Check password if enforced in settings
+                if (appSettings.enforcePwdProtection && !keyPassword) {
+                    showStatus('keyStatus', 'Password protection is required by your security settings', 'error');
+                    return;
+                }
+                
+                // Check password strength
+                if (keyPassword) {
+                    const strength = validator.measurePasswordStrength(keyPassword);
+                    if (strength.score < 4) {
+                        showStatus('keyStatus', 'Please use a stronger password: ' + strength.feedback, 'error');
+                        return;
+                    }
+                    
+                    // Confirm password match
+                    if (keyPassword !== confirmKeyPassword) {
+                        showStatus('keyStatus', 'Passwords do not match', 'error');
+                        return;
+                    }
+                }
+                
+                // Check key expiry if enforced
+                if (appSettings.enforceKeyExpiry && !keyExpiry) {
+                    showStatus('keyStatus', 'Key expiration is required by your security settings', 'error');
+                    return;
+                }
+                
+                // Prepare key data structure
+                const keyData = {
+                    id: crypto.randomUUID(),
+                    name: keyName,
+                    type: keyType,
+                    created: new Date().toISOString()
+                };
+                
+                // Set expiry date if specified
+                if (keyExpiry) {
+                    const expiryDays = parseInt(keyExpiry);
+                    const expiryDate = new Date();
+                    expiryDate.setDate(expiryDate.getDate() + expiryDays);
+                    keyData.expiry = expiryDate.toISOString();
+                }
+                
+                // Generate the actual cryptographic key based on type
+                if (keyType === 'aes') {
+                    // For AES symmetric encryption
+                    await generateAESKey(keyData, keyPassword);
+                } else if (keyType === 'rsa') {
+                    // For RSA 2048-bit encryption
+                    await generateRSAKey(keyData, keyPassword, RSA_CONFIG.KEY_SIZE);
+                } else if (keyType === 'rsa-4096') {
+                    // For RSA 4096-bit encryption
+                    await generateRSAKey(keyData, keyPassword, RSA_CONFIG.KEY_SIZE_4096);
+                } else if (keyType === 'ecc') {
+                    // For ECC P-256 encryption
+                    await generateECCKey(keyData, keyPassword, ECC_CONFIG.CURVE);
+                } else if (keyType === 'ecc-p384') {
+                    // For ECC P-384 encryption
+                    await generateECCKey(keyData, keyPassword, ECC_CONFIG.CURVE_P384);
+                }
+                
+                keys.push(keyData);
+                await saveKeys();
+                
+                // Clear form fields
+                document.getElementById('keyName').value = '';
+                document.getElementById('keyPassword').value = '';
+                document.getElementById('confirmKeyPassword').value = '';
+                document.getElementById('passwordStrength').className = 'password-strength';
+                document.getElementById('passwordFeedback').textContent = '';
+                
+                const keyTypeDisplay = getKeyTypeDisplay(keyData);
+                showStatus('keyStatus', `${keyTypeDisplay} key "${keyName}" generated successfully`, 'success');
+            } catch (error) {
+                console.error('Error generating key:', error);
+                showStatus('keyStatus', 'Error generating key: ' + error.message, 'error');
+            } finally {
+                setLoading(false);
+            }
+        }
+        
+        async function generateAESKey(keyData, keyPassword) {
+            // Generate a random AES key
+            const key = await window.crypto.subtle.generateKey(
+                {
+                    name: AES_CONFIG.MODE,
+                    length: AES_CONFIG.KEY_LENGTH
+                },
+                true, // extractable
+                ['encrypt', 'decrypt']
+            );
+            
+            // Export the key to raw format
+            const rawKey = await window.crypto.subtle.exportKey('raw', key);
+            
+            // Convert to base64 for storage
+            keyData.key = arrayBufferToBase64(rawKey);
+            keyData.algorithm = AES_CONFIG.MODE;
+            keyData.length = AES_CONFIG.KEY_LENGTH;
+            
+            // If password provided, encrypt the key
+            if (keyPassword) {
+                await encryptKeyWithPassword(keyData, keyPassword);
+            }
+        }
+        
+        async function generateRSAKey(keyData, keyPassword, keySize) {
+            // For RSA, generate a key pair
+            const keyPair = await window.crypto.subtle.generateKey(
+                {
+                    name: RSA_CONFIG.ALGORITHM,
+                    modulusLength: keySize,
+                    publicExponent: new Uint8Array([0x01, 0x00, 0x01]), // 65537
+                    hash: RSA_CONFIG.HASH
+                },
+                true, // extractable
+                ['encrypt', 'decrypt']
+            );
+            
+            // Export the public key
+            const publicKey = await window.crypto.subtle.exportKey('spki', keyPair.publicKey);
+            
+            // Export the private key
+            const privateKey = await window.crypto.subtle.exportKey('pkcs8', keyPair.privateKey);
+            
+            // Convert to base64 for storage
+            keyData.publicKey = arrayBufferToBase64(publicKey);
+            keyData.privateKey = arrayBufferToBase64(privateKey);
+            keyData.algorithm = RSA_CONFIG.ALGORITHM;
+            keyData.length = keySize;
+            
+            // If password provided, encrypt the private key
+            if (keyPassword) {
+                await encryptKeyWithPassword(keyData, keyPassword);
+            }
+        }
+        
+        async function generateECCKey(keyData, keyPassword, curve) {
+            // For ECC, generate a key pair
+            const keyPair = await window.crypto.subtle.generateKey(
+                {
+                    name: 'ECDH',
+                    namedCurve: curve
+                },
+                true, // extractable
+                ['deriveKey', 'deriveBits']
+            );
+            
+            // Export the public key
+            const publicKey = await window.crypto.subtle.exportKey('spki', keyPair.publicKey);
+            
+            // Export the private key
+            const privateKey = await window.crypto.subtle.exportKey('pkcs8', keyPair.privateKey);
+            
+            // Convert to base64 for storage
+            keyData.publicKey = arrayBufferToBase64(publicKey);
+            keyData.privateKey = arrayBufferToBase64(privateKey);
+            keyData.algorithm = 'ECDH';
+            keyData.curve = curve;
+            
+            // If password provided, encrypt the private key
+            if (keyPassword) {
+                await encryptKeyWithPassword(keyData, keyPassword);
+            }
+        }
+        
+        async function encryptKeyWithPassword(keyData, password) {
+            // Generate a salt for PBKDF2
+            const salt = window.crypto.getRandomValues(new Uint8Array(16));
+            keyData.salt = arrayBufferToBase64(salt);
+            
+            // Derive a key from the password
+            const derivedKey = await deriveKeyFromPassword(password, salt);
+            
+            // Generate an IV for encryption
+            const iv = window.crypto.getRandomValues(new Uint8Array(AES_CONFIG.IV_LENGTH));
+            keyData.iv = arrayBufferToBase64(iv);
+            
+            if (keyData.type === 'aes') {
+                // Encrypt the AES key
+                const encryptedKey = await encryptWithDerivedKey(
+                    derivedKey,
+                    base64ToArrayBuffer(keyData.key),
+                    iv
+                );
+                
+                // Replace the clear key with the encrypted one
+                keyData.key = arrayBufferToBase64(encryptedKey);
+                keyData.protected = true;
+            } else {
+                // For asymmetric keys (RSA, ECC) - encrypt the private key
+                const encryptedPrivateKey = await encryptWithDerivedKey(
+                    derivedKey,
+                    base64ToArrayBuffer(keyData.privateKey),
+                    iv
+                );
+                
+                // Replace the clear private key with the encrypted one
+                keyData.privateKey = arrayBufferToBase64(encryptedPrivateKey);
+                keyData.protected = true;
+            }
+        }
+        
+        async function decryptKeyWithPassword(keyData, password) {
+            try {
+                // Derive the key from password and salt
+                const salt = base64ToArrayBuffer(keyData.salt);
+                const derivedKey = await deriveKeyFromPassword(password, salt);
+                
+                // Get the IV
+                const iv = base64ToArrayBuffer(keyData.iv);
+                
+                // Create a new object to avoid modifying the original
+                const decryptedKeyData = { ...keyData };
+                
+                if (keyData.type === 'aes') {
+                    // Decrypt the AES key
+                    const decryptedKey = await decryptWithDerivedKey(
+                        derivedKey,
+                        base64ToArrayBuffer(keyData.key),
+                        iv
+                    );
+                    
+                    // Store the decrypted key
+                    decryptedKeyData.key = arrayBufferToBase64(decryptedKey);
+                    
+                    // Import the key to CryptoKey object for actual use
+                    decryptedKeyData._cryptoKey = await importAESKey(decryptedKey);
+                } else if (keyData.type === 'rsa' || keyData.type === 'rsa-4096') {
+                    // Decrypt the RSA private key
+                    const decryptedPrivateKey = await decryptWithDerivedKey(
+                        derivedKey,
+                        base64ToArrayBuffer(keyData.privateKey),
+                        iv
+                    );
+                    
+                    // Store the decrypted private key
+                    decryptedKeyData.privateKey = arrayBufferToBase64(decryptedPrivateKey);
+                    
+                    // Import the keys to CryptoKey objects
+                    decryptedKeyData._privateKey = await importRSAPrivateKey(
+                        decryptedPrivateKey,
+                        keyData.length || RSA_CONFIG.KEY_SIZE
+                    );
+                    decryptedKeyData._publicKey = await importRSAPublicKey(
+                        base64ToArrayBuffer(keyData.publicKey),
+                        keyData.length || RSA_CONFIG.KEY_SIZE
+                    );
+                } else if (keyData.type === 'ecc' || keyData.type === 'ecc-p384') {
+                    // Decrypt the ECC private key
+                    const decryptedPrivateKey = await decryptWithDerivedKey(
+                        derivedKey,
+                        base64ToArrayBuffer(keyData.privateKey),
+                        iv
+                    );
+                    
+                    // Store the decrypted private key
+                    decryptedKeyData.privateKey = arrayBufferToBase64(decryptedPrivateKey);
+                    
+                    // Import the keys to CryptoKey objects
+                    decryptedKeyData._privateKey = await importECCPrivateKey(
+                        decryptedPrivateKey,
+                        keyData.curve || ECC_CONFIG.CURVE
+                    );
+                    decryptedKeyData._publicKey = await importECCPublicKey(
+                        base64ToArrayBuffer(keyData.publicKey),
+                        keyData.curve || ECC_CONFIG.CURVE
+                    );
+                }
+                
+                // Store the decrypted key data securely in memory
+                return safeMemory.store(decryptedKeyData);
+            } catch (error) {
+                console.error('Decryption error:', error);
+                throw new Error('Invalid password or corrupted key');
+            }
+        }
+        
+        function updateKeysList() {
+            keysList.innerHTML = '';
+            
+            if (keys.length === 0) {
+                keysList.innerHTML = '<p>No keys available. Generate or import a key to get started.</p>';
+                return;
+            }
+            
+            keys.forEach(keyData => {
+                const keyItem = document.createElement('div');
+                keyItem.className = 'key-item';
+                
+                const keyTypeDisplay = getKeyTypeDisplay(keyData);
+                const protectedBadge = keyData.protected ? ' 🔒' : '';
+                let securityBadge = '';
+                
+                // Determine security level
+                let securityLevel = 'high';
+                if (!keyData.protected) {
+                    securityLevel = 'low';
+                } else if (keyData.type === 'aes') {
+                    securityLevel = 'high';
+                } else if ((keyData.type === 'rsa' && keyData.length < 3072) || 
+                           (keyData.type === 'ecc' && keyData.curve === 'P-256')) {
+                    securityLevel = 'medium';
+                }
+                
+                securityBadge = `<span class="security-badge ${securityLevel}">${securityLevel.toUpperCase()}</span>`;
+                
+                // Calculate expiry date and display if present
+                let expiryInfo = '';
+                if (keyData.expiry) {
+                    const expiryDate = new Date(keyData.expiry);
+                    const daysToExpiry = Math.ceil((expiryDate - new Date()) / (1000 * 60 * 60 * 24));
+                    expiryInfo = `<div class="key-expiry">Expires in ${daysToExpiry} days (${expiryDate.toLocaleDateString()})</div>`;
+                }
+                
+                keyItem.innerHTML = `
+                    <h3>${validator.sanitizeHTML(keyData.name)} (${keyTypeDisplay}${protectedBadge}) ${securityBadge}</h3>
+                    <div class="key-meta">Created: ${new Date(keyData.created).toLocaleString()}</div>
+                    <div class="key-meta">Algorithm: ${keyData.algorithm || ''} ${keyData.length ? keyData.length + ' bits' : keyData.curve || ''}</div>
+                    ${expiryInfo}
+                    <div class="key-actions">
+                        <button class="btn-secondary" onclick="exportKey('${keyData.id}')">Export</button>
+                        <button class="btn-secondary" onclick="deleteKey('${keyData.id}')">Delete</button>
+                    </div>
+                `;
+                
+                keysList.appendChild(keyItem);
+            });
+        }
+        
+        function getKeyTypeDisplay(keyData) {
+            if (keyData.type === 'aes') {
+                return 'AES';
+            } else if (keyData.type === 'rsa') {
+                return 'RSA-2048';
+            } else if (keyData.type === 'rsa-4096') {
+                return 'RSA-4096';
+            } else if (keyData.type === 'ecc') {
+                return 'ECC-P256';
+            } else if (keyData.type === 'ecc-p384') {
+                return 'ECC-P384';
+            }
+            return keyData.type.toUpperCase();
+        }
+        
+        function updateKeySelects() {
+            // Clear existing options
+            encryptionKeySelect.innerHTML = '<option value="">Select a key...</option>';
+            decryptionKeySelect.innerHTML = '<option value="">Select a key...</option>';
+            
+            // Add options for each key
+            keys.forEach(keyData => {
+                const option = document.createElement('option');
+                option.value = keyData.id;
+                
+                const keyTypeDisplay = getKeyTypeDisplay(keyData);
+                const protectedBadge = keyData.protected ? ' 🔒' : '';
+                option.text = `${keyData.name} (${keyTypeDisplay}${protectedBadge})`;
+                
+                encryptionKeySelect.appendChild(option.cloneNode(true));
+                decryptionKeySelect.appendChild(option);
+            });
+        }
+        
+        function handleEncryptionKeyChange() {
+            const keyId = encryptionKeySelect.value;
+            if (!keyId) {
+                document.getElementById('encryptionPasswordGroup').style.display = 'none';
+                return;
+            }
+            
+            // Find the selected key
+            const keyData = keys.find(k => k.id === keyId);
+            if (!keyData) return;
+            
+            // Show password field if key is protected
+            document.getElementById('encryptionPasswordGroup').style.display = keyData.protected ? 'block' : 'none';
+        }
+        
+        function handleDecryptionKeyChange() {
+            const keyId = decryptionKeySelect.value;
+            if (!keyId) {
+                document.getElementById('decryptionPasswordGroup').style.display = 'none';
+                return;
+            }
+            
+            // Find the selected key
+            const keyData = keys.find(k => k.id === keyId);
+            if (!keyData) return;
+            
+            // Show password field if key is protected
+            document.getElementById('decryptionPasswordGroup').style.display = keyData.protected ? 'block' : 'none';
+        }
+        
+        // Encryption/Decryption Functions
+        async function encryptMessage() {
+            try {
+                const message = document.getElementById('encryptMessage').value;
+                const keyId = document.getElementById('encryptionKey').value;
+                const keyPassword = document.getElementById('encryptionPassword').value;
+                
+                if (!message) {
+                    showStatus('encryptStatus', 'Please enter a message to encrypt', 'error');
+                    return;
+                }
+                
+                if (!keyId) {
+                    showStatus('encryptStatus', 'Please select an encryption key', 'error');
+                    return;
+                }
+                
+                setLoading(true);
+                
+                // Find the selected key
+                const keyData = keys.find(k => k.id === keyId);
+                if (!keyData) {
+                    showStatus('encryptStatus', 'Key not found', 'error');
+                    return;
+                }
+                
+                // Check if key is password-protected
+                let decryptedKeyRef = null;
+                let actualKeyData = keyData;
+                
+                if (keyData.protected) {
+                    if (!keyPassword) {
+                        showStatus('encryptStatus', 'Password required for this key', 'error');
+                        return;
+                    }
+                    
+                    decryptedKeyRef = await decryptKeyWithPassword(keyData, keyPassword);
+                    actualKeyData = safeMemory.retrieve(decryptedKeyRef);
+                }
+                
+                // Convert message to ArrayBuffer
+                const messageBuffer = new TextEncoder().encode(message);
+                
+                // Encrypt based on key type
+                let encryptionResult;
+                
+                if (keyData.type === 'aes') {
+                    encryptionResult = await encryptWithAES(messageBuffer, actualKeyData);
+                } else if (keyData.type === 'rsa' || keyData.type === 'rsa-4096') {
+                    encryptionResult = await encryptWithRSA(messageBuffer, actualKeyData);
+                } else if (keyData.type === 'ecc' || keyData.type === 'ecc-p384') {
+                    encryptionResult = await encryptWithECC(messageBuffer, actualKeyData);
+                } else {
+                    throw new Error('Unsupported key type');
+                }
+                
+                // Clean up sensitive data if we decrypted a protected key
+                if (decryptedKeyRef) {
+                    safeMemory.delete(decryptedKeyRef);
+                }
+                
+                // Encode the encryption info as a JSON string and then as base64
+                const encryptionInfoStr = JSON.stringify(encryptionResult);
+                const encodedEncryptionInfo = btoa(encryptionInfoStr);
+                
+                // Add a header to indicate this is a Lemonade encrypted message
+                const encryptedOutput = `--LM--\n${encodedEncryptionInfo}\n--ZM--`;
+                
+                document.getElementById('encryptedOutput').value = encryptedOutput;
+                showStatus('encryptStatus', 'Message encrypted successfully', 'success');
+            } catch (error) {
+                console.error('Encryption error:', error);
+                showStatus('encryptStatus', 'Encryption error: ' + error.message, 'error');
+            } finally {
+                // Clear password field for security
+                document.getElementById('encryptionPassword').value = '';
+                setLoading(false);
+            }
+        }
+        
+        async function encryptWithAES(messageBuffer, keyData) {
+            // Generate a random IV
+            const iv = window.crypto.getRandomValues(new Uint8Array(AES_CONFIG.IV_LENGTH));
+            
+            // Import the key for use with SubtleCrypto
+            let cryptoKey;
+            if (keyData._cryptoKey) {
+                cryptoKey = keyData._cryptoKey;
+            } else {
+                const keyBuffer = base64ToArrayBuffer(keyData.key);
+                cryptoKey = await importAESKey(keyBuffer);
+            }
+            
+            // Encrypt with AES-GCM
+            const encryptedData = await window.crypto.subtle.encrypt(
+                {
+                    name: AES_CONFIG.MODE,
+                    iv: iv,
+                    tagLength: AES_CONFIG.TAG_LENGTH
+                },
+                cryptoKey,
+                messageBuffer
+            );
+            
+            // Create encryption info object
+            return {
+                algorithm: AES_CONFIG.MODE,
+                keyId: keyData.id,
+                iv: arrayBufferToBase64(iv),
+                data: arrayBufferToBase64(encryptedData),
+                timestamp: new Date().toISOString()
+            };
+        }
+        
+        async function encryptWithRSA(messageBuffer, keyData) {
+            // For RSA, use a hybrid approach:
+            // 1. Generate a random AES key
+            // 2. Encrypt the message with the AES key
+            // 3. Encrypt the AES key with the RSA public key
+            
+            // Generate a random IV
+            const iv = window.crypto.getRandomValues(new Uint8Array(AES_CONFIG.IV_LENGTH));
+            
+            // Generate a random AES key
+            const aesKey = await window.crypto.subtle.generateKey(
+                {
+                    name: AES_CONFIG.MODE,
+                    length: AES_CONFIG.KEY_LENGTH
+                },
+                true,
+                ['encrypt', 'decrypt']
+            );
+            
+            // Encrypt the message with AES
+            const encryptedMessage = await window.crypto.subtle.encrypt(
+                {
+                    name: AES_CONFIG.MODE,
+                    iv: iv,
+                    tagLength: AES_CONFIG.TAG_LENGTH
+                },
+                aesKey,
+                messageBuffer
+            );
+            
+            // Export the AES key
+            const exportedAesKey = await window.crypto.subtle.exportKey('raw', aesKey);
+            
+            // Import the RSA public key
+            let rsaPublicKey;
+            if (keyData._publicKey) {
+                rsaPublicKey = keyData._publicKey;
+            } else {
+                const publicKeyBuffer = base64ToArrayBuffer(keyData.publicKey);
+                rsaPublicKey = await importRSAPublicKey(publicKeyBuffer, keyData.length || RSA_CONFIG.KEY_SIZE);
+            }
+            
+            // Encrypt the AES key with RSA
+            const encryptedAesKey = await window.crypto.subtle.encrypt(
+                {
+                    name: RSA_CONFIG.ALGORITHM
+                },
+                rsaPublicKey,
+                exportedAesKey
+            );
+            
+            // Create encryption info object
+            return {
+                algorithm: RSA_CONFIG.ALGORITHM + '+' + AES_CONFIG.MODE,
+                keyId: keyData.id,
+                iv: arrayBufferToBase64(iv),
+                encryptedKey: arrayBufferToBase64(encryptedAesKey),
+                data: arrayBufferToBase64(encryptedMessage),
+                timestamp: new Date().toISOString(),
+                keySize: keyData.length || RSA_CONFIG.KEY_SIZE
+            };
+        }
+        
+        async function encryptWithECC(messageBuffer, keyData) {
+            // For ECC, use a hybrid approach:
+            // 1. Generate ephemeral ECC key pair
+            // 2. Perform ECDH key derivation
+            // 3. Use derived key for AES encryption
+            
+            // Generate a random IV
+            const iv = window.crypto.getRandomValues(new Uint8Array(AES_CONFIG.IV_LENGTH));
+            
+            // Generate an ephemeral ECC key pair
+            const ephemeralKeyPair = await window.crypto.subtle.generateKey(
+                {
+                    name: 'ECDH',
+                    namedCurve: keyData.curve || ECC_CONFIG.CURVE
+                },
+                true,
+                ['deriveKey', 'deriveBits']
+            );
+            
+            // Export the ephemeral public key to send with the message
+            const ephemeralPublicKey = await window.crypto.subtle.exportKey(
+                'spki',
+                ephemeralKeyPair.publicKey
+            );
+            
+            // Import the recipient's public key
+            let recipientPublicKey;
+            if (keyData._publicKey) {
+                recipientPublicKey = keyData._publicKey;
+            } else {
+                const publicKeyBuffer = base64ToArrayBuffer(keyData.publicKey);
+                recipientPublicKey = await importECCPublicKey(
+                    publicKeyBuffer,
+                    keyData.curve || ECC_CONFIG.CURVE
+                );
+            }
+            
+            // Derive a shared secret using ECDH
+            const derivedKey = await window.crypto.subtle.deriveKey(
+                {
+                    name: 'ECDH',
+                    public: recipientPublicKey
+                },
+                ephemeralKeyPair.privateKey,
+                {
+                    name: AES_CONFIG.MODE,
+                    length: AES_CONFIG.KEY_LENGTH
+                },
+                false,
+                ['encrypt']
+            );
+            
+            // Encrypt the message with the derived key
+            const encryptedMessage = await window.crypto.subtle.encrypt(
+                {
+                    name: AES_CONFIG.MODE,
+                    iv: iv,
+                    tagLength: AES_CONFIG.TAG_LENGTH
+                },
+                derivedKey,
+                messageBuffer
+            );
+            
+            // Create encryption info object
+            return {
+                algorithm: 'ECDH+' + AES_CONFIG.MODE,
+                keyId: keyData.id,
+                iv: arrayBufferToBase64(iv),
+                ephemeralPublicKey: arrayBufferToBase64(ephemeralPublicKey),
+                data: arrayBufferToBase64(encryptedMessage),
+                timestamp: new Date().toISOString(),
+                curve: keyData.curve || ECC_CONFIG.CURVE
+            };
+        }
+        
+        async function decryptMessage() {
+            try {
+                const encryptedMessage = document.getElementById('encryptedMessage').value;
+                const keyId = document.getElementById('decryptionKey').value;
+                const keyPassword = document.getElementById('decryptionPassword').value;
+                
+                if (!encryptedMessage) {
+                    showStatus('decryptStatus', 'Please enter an encrypted message', 'error');
+                    return;
+                }
+                
+                if (!keyId) {
+                    showStatus('decryptStatus', 'Please select a decryption key', 'error');
+                    return;
+                }
+                
+                // Validate the encrypted message format
+                if (!validator.isValidEncryptedMessage(encryptedMessage)) {
+                    showStatus('decryptStatus', 'Invalid encrypted message format', 'error');
+                    return;
+                }
+                
+                setLoading(true);
+                
+                // Parse the encrypted message
+                const messageMatch = encryptedMessage.match(/--LM--([\s\S]+?)--ZM--/);
+                if (!messageMatch || !messageMatch[1]) {
+                    showStatus('decryptStatus', 'Invalid encrypted message format', 'error');
+                    return;
+                }
+                
+                const encodedEncryptionInfo = messageMatch[1].trim();
+                let encryptionInfo;
+                
+                try {
+                    encryptionInfo = JSON.parse(atob(encodedEncryptionInfo));
+                } catch (error) {
+                    showStatus('decryptStatus', 'Invalid encrypted message data', 'error');
+                    return;
+                }
+                
+                // Check if the message was encrypted with the selected key
+                if (encryptionInfo.keyId !== keyId) {
+                    showStatus('decryptStatus', 'This message was not encrypted with the selected key', 'error');
+                    return;
+                }
+                
+                // Find the selected key
+                const keyData = keys.find(k => k.id === keyId);
+                if (!keyData) {
+                    showStatus('decryptStatus', 'Key not found', 'error');
+                    return;
+                }
+                
+                // Check if key is password-protected
+                let decryptedKeyRef = null;
+                let actualKeyData = keyData;
+                
+                if (keyData.protected) {
+                    if (!keyPassword) {
+                        showStatus('decryptStatus', 'Password required for this key', 'error');
+                        return;
+                    }
+                    
+                    decryptedKeyRef = await decryptKeyWithPassword(keyData, keyPassword);
+                    actualKeyData = safeMemory.retrieve(decryptedKeyRef);
+                }
+                
+                // Decrypt based on algorithm
+                let decryptedText;
+                
+                if (encryptionInfo.algorithm === AES_CONFIG.MODE) {
+                    decryptedText = await decryptWithAES(encryptionInfo, actualKeyData);
+                } else if (encryptionInfo.algorithm === RSA_CONFIG.ALGORITHM + '+' + AES_CONFIG.MODE) {
+                    decryptedText = await decryptWithRSA(encryptionInfo, actualKeyData);
+                } else if (encryptionInfo.algorithm === 'ECDH+' + AES_CONFIG.MODE) {
+                    decryptedText = await decryptWithECC(encryptionInfo, actualKeyData);
+                } else {
+                    throw new Error('Unsupported encryption algorithm: ' + encryptionInfo.algorithm);
+                }
+                
+                // Clean up sensitive data if we decrypted a protected key
+                if (decryptedKeyRef) {
+                    safeMemory.delete(decryptedKeyRef);
+                }
+                
+                document.getElementById('decryptedOutput').value = decryptedText;
+                showStatus('decryptStatus', 'Message decrypted successfully', 'success');
+            } catch (error) {
+                console.error('Decryption error:', error);
+                showStatus('decryptStatus', 'Decryption error: ' + error.message, 'error');
+            } finally {
+                // Clear password field for security
+                document.getElementById('decryptionPassword').value = '';
+                setLoading(false);
+            }
+        }
+        
+        async function decryptWithAES(encryptionInfo, keyData) {
+            // Get the encrypted data and IV
+            const encryptedData = base64ToArrayBuffer(encryptionInfo.data);
+            const iv = base64ToArrayBuffer(encryptionInfo.iv);
+            
+            // Import the key for use with SubtleCrypto
+            let cryptoKey;
+            if (keyData._cryptoKey) {
+                cryptoKey = keyData._cryptoKey;
+            } else {
+                const keyBuffer = base64ToArrayBuffer(keyData.key);
+                cryptoKey = await importAESKey(keyBuffer);
+            }
+            
+            // Decrypt with AES-GCM
+            const decryptedData = await window.crypto.subtle.decrypt(
+                {
+                    name: AES_CONFIG.MODE,
+                    iv: iv,
+                    tagLength: AES_CONFIG.TAG_LENGTH
+                },
+                cryptoKey,
+                encryptedData
+            );
+            
+            // Convert the decrypted data to text
+            return new TextDecoder().decode(decryptedData);
+        }
+        
+        async function decryptWithRSA(encryptionInfo, keyData) {
+            // Get the encrypted AES key, encrypted data, and IV
+            const encryptedAesKey = base64ToArrayBuffer(encryptionInfo.encryptedKey);
+            const encryptedData = base64ToArrayBuffer(encryptionInfo.data);
+            const iv = base64ToArrayBuffer(encryptionInfo.iv);
+            
+            // Import the RSA private key
+            let rsaPrivateKey;
+            if (keyData._privateKey) {
+                rsaPrivateKey = keyData._privateKey;
+            } else {
+                const privateKeyBuffer = base64ToArrayBuffer(keyData.privateKey);
+                rsaPrivateKey = await importRSAPrivateKey(
+                    privateKeyBuffer,
+                    encryptionInfo.keySize || keyData.length || RSA_CONFIG.KEY_SIZE
+                );
+            }
+            
+            // Decrypt the AES key with RSA
+            const aesKeyBuffer = await window.crypto.subtle.decrypt(
+                {
+                    name: RSA_CONFIG.ALGORITHM
+                },
+                rsaPrivateKey,
+                encryptedAesKey
+            );
+            
+            // Import the AES key
+            const aesKey = await importAESKey(aesKeyBuffer);
+            
+            // Decrypt the message with the AES key
+            const decryptedData = await window.crypto.subtle.decrypt(
+                {
+                    name: AES_CONFIG.MODE,
+                    iv: iv,
+                    tagLength: AES_CONFIG.TAG_LENGTH
+                },
+                aesKey,
+                encryptedData
+            );
+            
+            // Convert the decrypted data to text
+            return new TextDecoder().decode(decryptedData);
+        }
+        
+        async function decryptWithECC(encryptionInfo, keyData) {
+            // Get the encrypted data, ephemeral public key, and IV
+            const encryptedData = base64ToArrayBuffer(encryptionInfo.data);
+            const ephemeralPublicKeyBuffer = base64ToArrayBuffer(encryptionInfo.ephemeralPublicKey);
+            const iv = base64ToArrayBuffer(encryptionInfo.iv);
+            
+            // Import the ephemeral public key
+            const ephemeralPublicKey = await importECCPublicKey(
+                ephemeralPublicKeyBuffer,
+                encryptionInfo.curve || ECC_CONFIG.CURVE
+            );
+            
+            // Import the private key
+            let privateKey;
+            if (keyData._privateKey) {
+                privateKey = keyData._privateKey;
+            } else {
+                const privateKeyBuffer = base64ToArrayBuffer(keyData.privateKey);
+                privateKey = await importECCPrivateKey(
+                    privateKeyBuffer,
+                    encryptionInfo.curve || ECC_CONFIG.CURVE
+                );
+            }
+            
+            // Derive the shared secret using ECDH
+            const derivedKey = await window.crypto.subtle.deriveKey(
+                {
+                    name: 'ECDH',
+                    public: ephemeralPublicKey
+                },
+                privateKey,
+                {
+                    name: AES_CONFIG.MODE,
+                    length: AES_CONFIG.KEY_LENGTH
+                },
+                false,
+                ['decrypt']
+            );
+            
+            // Decrypt the message with the derived key
+            const decryptedData = await window.crypto.subtle.decrypt(
+                {
+                    name: AES_CONFIG.MODE,
+                    iv: iv,
+                    tagLength: AES_CONFIG.TAG_LENGTH
+                },
+                derivedKey,
+                encryptedData
+            );
+            
+            // Convert the decrypted data to text
+            return new TextDecoder().decode(decryptedData);
+        }
+        
+        // Key Import/Export Functions
+        async function importKey() {
+            try {
+                const importText = prompt("Paste the exported key data:");
+                if (!importText) return;
+                
+                setLoading(true);
+                
+                let keyData;
+                try {
+                    const jsonText = atob(importText.trim());
+                    keyData = JSON.parse(jsonText);
+                } catch (error) {
+                    throw new Error('Invalid key data format');
+                }
+                
+                // Validate the key data
+                if (!keyData.id || !keyData.name || !keyData.type || !keyData.created) {
+                    throw new Error('Missing required key properties');
+                }
+                
+                // Validate key name
+                if (!validator.isValidKeyName(keyData.name)) {
+                    throw new Error('Invalid key name format');
+                }
+                
+                // Check if a key with this ID already exists
+                const existingKeyIndex = keys.findIndex(k => k.id === keyData.id);
+                if (existingKeyIndex >= 0) {
+                    const overwrite = confirm(`A key with name "${keyData.name}" already exists. Overwrite?`);
+                    if (overwrite) {
+                        keys[existingKeyIndex] = keyData;
+                    } else {
+                        // Generate a new ID for the key
+                        keyData.id = crypto.randomUUID();
+                        keys.push(keyData);
+                    }
+                } else {
+                    keys.push(keyData);
+                }
+                
+                await saveKeys();
+                showStatus('keyStatus', `Key "${keyData.name}" imported successfully`, 'success');
+            } catch (error) {
+                console.error('Import error:', error);
+                showStatus('keyStatus', 'Import error: ' + error.message, 'error');
+            } finally {
+                setLoading(false);
+            }
+        }
+        
+        async function exportKey(keyId) {
+            try {
+                const keyData = keys.find(k => k.id === keyId);
+                if (!keyData) {
+                    alert('Key not found');
+                    return;
+                }
+                
+                // Convert key data to JSON and then to base64
+                const jsonText = JSON.stringify(keyData);
+                const exportText = btoa(jsonText);
+                
+                // Create a secure method to copy sensitive data
+                const success = await secureClipboardCopy(exportText);
+                
+                if (success) {
+                    showStatus('keyStatus', `Key "${keyData.name}" copied to clipboard`, 'success');
+                    
+                    // If configured, schedule clipboard clearing
+                    if (appSettings.clearClipboard) {
+                        scheduleClipboardClear();
+                    }
+                } else {
+                    // Fallback method: Create a download
+                    const blob = new Blob([exportText], { type: 'text/plain' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `Lemonade-key-${keyData.name.replace(/[^a-z0-9]/gi, '_')}.txt`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                    
+                    showStatus('keyStatus', `Key "${keyData.name}" saved as file`, 'success');
+                }
+            } catch (error) {
+                console.error('Export error:', error);
+                showStatus('keyStatus', 'Export error: ' + error.message, 'error');
+            }
+        }
+        
+        async function exportAllKeys() {
+            try {
+                if (keys.length === 0) {
+                    showStatus('keyStatus', 'No keys available to export', 'warning');
+                    return;
+                }
+                
+                // Ask for a password to protect the export
+                const password = prompt("Please enter a password to protect your key backup. This is highly recommended for security.", "");
+                
+                // Create a data blob
+                let exportData;
+                
+                if (password) {
+                    // Encrypt the keys for additional security
+                    const keysJson = JSON.stringify(keys);
+                    const keysBuffer = new TextEncoder().encode(keysJson);
+                    
+                    // Generate salt and derive key
+                    const salt = window.crypto.getRandomValues(new Uint8Array(16));
+                    const derivedKey = await deriveKeyFromPassword(password, salt);
+                    
+                    // Generate IV
+                    const iv = window.crypto.getRandomValues(new Uint8Array(AES_CONFIG.IV_LENGTH));
+                    
+                    // Encrypt keys
+                    const encryptedKeys = await encryptWithDerivedKey(derivedKey, keysBuffer, iv);
+                    
+                    // Create protected export format
+                    exportData = JSON.stringify({
+                        format: 'LemonadeProtectedBackup',
+                        salt: arrayBufferToBase64(salt),
+                        iv: arrayBufferToBase64(iv),
+                        data: arrayBufferToBase64(encryptedKeys)
+                    });
+                } else {
+                    // Unprotected export - show warning
+                    const confirmUnprotected = confirm("WARNING: Exporting keys without a password is not secure. Anyone with access to this file will be able to use your keys. Continue anyway?");
+                    if (!confirmUnprotected) return;
+                    
+                    exportData = JSON.stringify(keys);
+                }
+                
+                // Create the download link
+                const blob = new Blob([exportData], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'Lemonade-keys-backup.json';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                showStatus('keyStatus', 'All keys exported successfully', 'success');
+            } catch (error) {
+                console.error('Export error:', error);
+                showStatus('keyStatus', 'Export error: ' + error.message, 'error');
+            }
+        }
+        
+        async function secureClipboardCopy(text) {
+            // Try the modern Clipboard API with secure context
+            try {
+                await navigator.clipboard.writeText(text);
+                return true;
+            } catch (clipboardError) {
+                console.log('Modern clipboard API failed:', clipboardError);
+                return false;
+            }
+        }
+        
+        function scheduleClipboardClear() {
+            // Clear any existing timer
+            if (clipboardClearTimer) {
+                clearTimeout(clipboardClearTimer);
+            }
+            
+            // Set new timer
+            clipboardClearTimer = setTimeout(async () => {
+                try {
+                    // Try to clear clipboard by writing empty string
+                    await navigator.clipboard.writeText('');
+                    console.log('Clipboard cleared for security');
+                } catch (error) {
+                    console.log('Could not auto-clear clipboard:', error);
+                }
+            }, appSettings.clearClipboardDelay * 1000);
+        }
+        
+        function deleteKey(keyId) {
+            const keyData = keys.find(k => k.id === keyId);
+            if (!keyData) {
+                alert('Key not found');
+                return;
+            }
+            
+            const confirm = window.confirm(`Are you sure you want to delete the key "${keyData.name}"? This action cannot be undone.`);
+            if (confirm) {
+                keys = keys.filter(k => k.id !== keyId);
+                saveKeys();
+                showStatus('keyStatus', `Key "${keyData.name}" deleted successfully`, 'success');
+            }
+        }
+        
+        // Utility Functions
+        function showStatus(elementId, message, type) {
+            const statusElement = document.getElementById(elementId);
+            statusElement.textContent = validator.sanitizeHTML(message);
+            statusElement.className = `status ${type}`;
+            
+            // Auto-hide status after 10 seconds
+            setTimeout(() => {
+                if (statusElement.textContent === validator.sanitizeHTML(message)) {
+                    statusElement.className = 'status';
+                }
+            }, 10000);
+        }
+        
+        async function copyToClipboard(sourceElementId, statusElementId) {
+            const text = document.getElementById(sourceElementId).value;
+            if (!text) {
+                showStatus(statusElementId, 'Nothing to copy', 'error');
+                return;
+            }
+            
+            const success = await secureClipboardCopy(text);
+            
+            if (success) {
+                showStatus(statusElementId, 'Copied to clipboard', 'success');
+                
+                // If configured, schedule clipboard clearing
+                if (appSettings.clearClipboard) {
+                    scheduleClipboardClear();
+                }
+            } else {
+                showStatus(statusElementId, 'Unable to copy automatically. Please select the text and press Ctrl+C (or ⌘+C) to copy manually.', 'warning');
+                
+                // Select the text in the original element for easier manual copying
+                const element = document.getElementById(sourceElementId);
+                element.focus();
+                element.select();
+            }
+        }
+        
+        // Crypto Helper Functions
+        function arrayBufferToBase64(buffer) {
+            const bytes = new Uint8Array(buffer);
+            let binary = '';
+            for (let i = 0; i < bytes.byteLength; i++) {
+                binary += String.fromCharCode(bytes[i]);
+            }
+            return btoa(binary);
+        }
+        
+        function base64ToArrayBuffer(base64) {
+            const binaryString = atob(base64);
+            const bytes = new Uint8Array(binaryString.length);
+            for (let i = 0; i < binaryString.length; i++) {
+                bytes[i] = binaryString.charCodeAt(i);
+            }
+            return bytes.buffer;
+        }
+        
+        async function deriveKeyFromPassword(password, salt) {
+            // Convert password to an array buffer
+            const passwordBuffer = new TextEncoder().encode(password);
+            
+            // Import the password as a key
+            const baseKey = await window.crypto.subtle.importKey(
+                'raw',
+                passwordBuffer,
+                { name: 'PBKDF2' },
+                false,
+                ['deriveKey']
+            );
+            
+            // Derive a key using PBKDF2
+            return window.crypto.subtle.deriveKey(
+                {
+                    name: 'PBKDF2',
+                    salt: salt,
+                    iterations: PBKDF2_CONFIG.ITERATIONS,
+                    hash: PBKDF2_CONFIG.HASH
+                },
+                baseKey,
+                { name: AES_CONFIG.MODE, length: AES_CONFIG.KEY_LENGTH },
+                true,
+                ['encrypt', 'decrypt']
+            );
+        }
+        
+        async function encryptWithDerivedKey(key, data, iv) {
+            return window.crypto.subtle.encrypt(
+                {
+                    name: AES_CONFIG.MODE,
+                    iv: iv,
+                    tagLength: AES_CONFIG.TAG_LENGTH
+                },
+                key,
+                data
+            );
+        }
+        
+        async function decryptWithDerivedKey(key, data, iv) {
+            return window.crypto.subtle.decrypt(
+                {
+                    name: AES_CONFIG.MODE,
+                    iv: iv,
+                    tagLength: AES_CONFIG.TAG_LENGTH
+                },
+                key,
+                data
+            );
+        }
+        
+        async function importAESKey(keyData) {
+            return window.crypto.subtle.importKey(
+                'raw',
+                keyData,
+                { name: AES_CONFIG.MODE },
+                false,
+                ['encrypt', 'decrypt']
+            );
+        }
+        
+        async function importRSAPublicKey(keyData, keySize) {
+            return window.crypto.subtle.importKey(
+                'spki',
+                keyData,
+                {
+                    name: RSA_CONFIG.ALGORITHM,
+                    hash: RSA_CONFIG.HASH
+                },
+                false,
+                ['encrypt']
+            );
+        }
+        
+        async function importRSAPrivateKey(keyData, keySize) {
+            return window.crypto.subtle.importKey(
+                'pkcs8',
+                keyData,
+                {
+                    name: RSA_CONFIG.ALGORITHM,
+                    hash: RSA_CONFIG.HASH
+                },
+                false,
+                ['decrypt']
+            );
+        }
+        
+        async function importECCPublicKey(keyData, curve) {
+            return window.crypto.subtle.importKey(
+                'spki',
+                keyData,
+                {
+                    name: 'ECDH',
+                    namedCurve: curve
+                },
+                false,
+                []
+            );
+        }
+        
+        async function importECCPrivateKey(keyData, curve) {
+            return window.crypto.subtle.importKey(
+                'pkcs8',
+                keyData,
+                {
+                    name: 'ECDH',
+                    namedCurve: curve
+                },
+                false,
+                ['deriveKey', 'deriveBits']
+            );
+        }
+        
+        // Database Helper Functions
+        async function saveToDatabase(storeName, data) {
+            return new Promise((resolve, reject) => {
+                if (!db) {
+                    reject(new Error('Database not initialized'));
+                    return;
+                }
+                
+                const transaction = db.transaction(storeName, 'readwrite');
+                const store = transaction.objectStore(storeName);
+                const request = store.put(data);
+                
+                request.onsuccess = () => resolve();
+                request.onerror = () => reject(request.error);
+            });
+        }
+        
+        async function getFromDatabase(storeName, key) {
+            return new Promise((resolve, reject) => {
+                if (!db) {
+                    reject(new Error('Database not initialized'));
+                    return;
+                }
+                
+                const transaction = db.transaction(storeName, 'readonly');
+                const store = transaction.objectStore(storeName);
+                const request = store.get(key);
+                
+                request.onsuccess = () => resolve(request.result);
+                request.onerror = () => reject(request.error);
+            });
+        }
+        
+        async function getAllFromDatabase(storeName) {
+            return new Promise((resolve, reject) => {
+                if (!db) {
+                    reject(new Error('Database not initialized'));
+                    return;
+                }
+                
+                const transaction = db.transaction(storeName, 'readonly');
+                const store = transaction.objectStore(storeName);
+                const request = store.getAll();
+                
+                request.onsuccess = () => resolve(request.result);
+                request.onerror = () => reject(request.error);
+            });
+        }
+        
+        async function clearDatabase(storeName) {
+            return new Promise((resolve, reject) => {
+                if (!db) {
+                    reject(new Error('Database not initialized'));
+                    return;
+                }
+                
+                const transaction = db.transaction(storeName, 'readwrite');
+                const store = transaction.objectStore(storeName);
+                const request = store.clear();
+                
+                request.onsuccess = () => resolve();
+                request.onerror = () => reject(request.error);
+            });
+        }
+        
+        // Make functions globally available for onclick handlers
+        window.exportKey = exportKey;
+        window.deleteKey = deleteKey;
+    </script>
+    <script>
+        // PWA Support - Inline Service Worker and Manifest
+        (function() {
+            // Generate and register a manifest from our JSON
+            function registerManifest() {
+                const manifestData = document.getElementById('pwa-manifest').textContent;
+                const manifestBlob = new Blob([manifestData], {type: 'application/json'});
+                const manifestURL = URL.createObjectURL(manifestBlob);
+                
+                const link = document.createElement('link');
+                link.rel = 'manifest';
+                link.href = manifestURL;
+                document.head.appendChild(link);
+            }
+            
+            // Register the service worker
+            async function registerServiceWorker() {
+                if ('serviceWorker' in navigator) {
+                    try {
+                        // Create inline service worker from JavaScript
+                        const swCode = `
+                            const CACHE_NAME = 'Lemonade-cache-v1';
+                            const urlsToCache = [
+                                './',
+                                './?source=pwa'
+                            ];
+                            
+                            self.addEventListener('install', (event) => {
+                                event.waitUntil(
+                                    caches.open(CACHE_NAME)
+                                        .then((cache) => {
+                                            return cache.addAll(urlsToCache);
+                                        })
+                                );
+                            });
+                            
+                            self.addEventListener('fetch', (event) => {
+                                event.respondWith(
+                                    caches.match(event.request)
+                                        .then((response) => {
+                                            // Cache hit - return response
+                                            if (response) {
+                                                return response;
+                                            }
+                                            
+                                            return fetch(event.request).then(
+                                                (response) => {
+                                                    // Don't cache non-success responses or cross-origin requests
+                                                    if (!response || response.status !== 200 || response.type !== 'basic') {
+                                                        return response;
+                                                    }
+                                                    
+                                                    // Clone the response since it can only be consumed once
+                                                    const responseToCache = response.clone();
+                                                    
+                                                    caches.open(CACHE_NAME)
+                                                        .then((cache) => {
+                                                            cache.put(event.request, responseToCache);
+                                                        });
+                                                        
+                                                    return response;
+                                                }
+                                            );
+                                        })
+                                );
+                            });
+                            
+                            self.addEventListener('activate', (event) => {
+                                const cacheWhitelist = [CACHE_NAME];
+                                
+                                event.waitUntil(
+                                    caches.keys().then((cacheNames) => {
+                                        return Promise.all(
+                                            cacheNames.map((cacheName) => {
+                                                if (cacheWhitelist.indexOf(cacheName) === -1) {
+                                                    return caches.delete(cacheName);
+                                                }
+                                            })
+                                        );
+                                    })
+                                );
+                            });
+                        `;
+                        
+                        // Convert the service worker code to a Blob URL
+                        const swBlob = new Blob([swCode], {type: 'application/javascript'});
+                        const swUrl = URL.createObjectURL(swBlob);
+                        
+                        // Register the service worker using the Blob URL
+                        const registration = await navigator.serviceWorker.register(swUrl, {scope: './'});
+                        console.log('Service Worker registered with scope:', registration.scope);
+                    } catch (error) {
+                        console.error('Service Worker registration failed:', error);
+                    }
+                }
+            }
+            
+            // Add install event and button for PWA installation
+            let deferredPrompt;
+            
+            function setupInstallButton() {
+                // Create install button (initially hidden)
+                const installContainer = document.createElement('div');
+                installContainer.style.cssText = 'position:fixed; bottom:20px; left:50%; transform:translateX(-50%); z-index:999; display:none;';
+                
+                const installButton = document.createElement('button');
+                installButton.textContent = 'Install Lemonade';
+                installButton.style.cssText = 'background-color:var(--button-bg); color:var(--button-text); border:none; border-radius:8px; padding:12px 24px; font-size:1rem; cursor:pointer; box-shadow:0 4px 12px rgba(0,0,0,0.2);';
+                
+                installContainer.appendChild(installButton);
+                document.body.appendChild(installContainer);
+                
+                // Listen for beforeinstallprompt event
+                window.addEventListener('beforeinstallprompt', (e) => {
+                    // Prevent default behavior
+                    e.preventDefault();
+                    
+                    // Store the event to use later
+                    deferredPrompt = e;
+                    
+                    // Show the install button
+                    installContainer.style.display = 'block';
+                });
+                
+                // Add click handler for install button
+                installButton.addEventListener('click', async () => {
+                    if (!deferredPrompt) return;
+                    
+                    // Show the installation prompt
+                    deferredPrompt.prompt();
+                    
+                    // Wait for the user to respond to the prompt
+                    const { outcome } = await deferredPrompt.userChoice;
+                    console.log(`User response to install prompt: ${outcome}`);
+                    
+                    // Clear the saved prompt - it can only be used once
+                    deferredPrompt = null;
+                    
+                    // Hide the button
+                    installContainer.style.display = 'none';
+                });
+                
+                // Hide the button if the app is installed
+                window.addEventListener('appinstalled', () => {
+                    console.log('PWA installed successfully');
+                    installContainer.style.display = 'none';
+                    deferredPrompt = null;
+                });
+            }
+            
+            // Initialize PWA features
+            function initPWA() {
+                registerManifest();
+                registerServiceWorker();
+                setupInstallButton();
+            }
+            
+            // Initialize when the page is loaded
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', initPWA);
+            } else {
+                initPWA();
+            }
+        })();
+        </script>
+</body>
+</html>
