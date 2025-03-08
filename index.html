@@ -801,7 +801,19 @@
                         </select>
                     </div>
                 </div>
-                
+
+                <div class="settings-section">
+                    <h3>Install App</h3>
+                    <p>Install Lemonade as an app on your device for easier access and offline functionality.</p>
+                    <div id="installContainer">
+                        <button id="installBtn" class="btn-secondary">Install Lemonade App</button>
+                        <p class="install-note" style="margin-top: 8px; font-size: 0.85rem; color: #888;">
+                            (Button will be enabled when installation is available)
+                        </p>
+                    </div>
+                    <div id="installStatus" class="status"></div>
+                </div>
+
                 <div class="btn-group">
                     <button id="saveSettingsBtn">Save Settings</button>
                     <button id="resetSettingsBtn" class="btn-secondary">Reset to Defaults</button>
@@ -809,14 +821,6 @@
                 
                 <div id="settingsStatus" class="status"></div>
             </div>
-        </div>
-        <div class="settings-section">
-            <h3>Install App</h3>
-            <p>Install Lemonade as an app on your device for easier access and offline functionality.</p>
-            <div id="installContainer" style="display: none;">
-                <button id="installBtn" class="btn-secondary">Install Lemonade App</button>
-            </div>
-            <div id="installStatus" class="status"></div>
         </div>
     </div>
     
@@ -2769,6 +2773,67 @@
         const installContainer = document.getElementById('installContainer');
         const installStatus = document.getElementById('installStatus');
 
+        // Initially disable the install button until we know it's available
+        if (installBtn) {
+            installBtn.disabled = true;
+        }
+
+        // Handle PWA installation
+        window.addEventListener('beforeinstallprompt', (e) => {
+            // Prevent Chrome 67+ from automatically showing the prompt
+            e.preventDefault();
+            
+            // Stash the event so it can be triggered later
+            deferredPrompt = e;
+            
+            // Enable the install button
+            if (installBtn) {
+                installBtn.disabled = false;
+                const noteElement = installContainer.querySelector('.install-note');
+                if (noteElement) {
+                    noteElement.style.display = 'none';
+                }
+                showStatus('installStatus', 'Installation is now available!', 'success');
+            }
+        });
+
+        // Install button click handler
+        if (installBtn) {
+            installBtn.addEventListener('click', async () => {
+                if (!deferredPrompt) {
+                    showStatus('installStatus', 'Installation not available in this browser or app is already installed', 'warning');
+                    return;
+                }
+                
+                // Show the install prompt
+                deferredPrompt.prompt();
+                
+                // Wait for the user to respond to the prompt
+                const { outcome } = await deferredPrompt.userChoice;
+                console.log(`User response to install prompt: ${outcome}`);
+                
+                if (outcome === 'accepted') {
+                    showStatus('installStatus', 'Lemonade has been installed successfully!', 'success');
+                } else {
+                    showStatus('installStatus', 'Installation was canceled', 'warning');
+                }
+                
+                // Clear the saved prompt since it can't be used again
+                deferredPrompt = null;
+                installBtn.disabled = true;
+            });
+        }
+
+        // Check if already installed
+        window.addEventListener('appinstalled', () => {
+            console.log('Lemonade was installed');
+            deferredPrompt = null;
+            if (installBtn) {
+                installBtn.disabled = true;
+            }
+            showStatus('installStatus', 'Lemonade has been installed successfully!', 'success');
+        });
+
         // Create and inject web manifest
         function createManifest() {
             const manifestContent = {
@@ -2930,6 +2995,29 @@
                 showStatus('installStatus', 'Lemonade is running as an installed app', 'success');
             }
         });
+
+// Debug info for PWA installation
+if ('serviceWorker' in navigator) {
+    console.log('✓ Service Worker API is supported');
+} else {
+    console.log('✗ Service Worker API is not supported');
+    showStatus('installStatus', 'Your browser does not support Service Workers required for installation', 'warning');
+}
+
+// Check if running on HTTPS (required for PWA)
+if (window.location.protocol === 'https:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+    console.log('✓ Running in secure context (HTTPS or localhost)');
+} else {
+    console.log('✗ Not running in secure context (HTTPS required for PWA installation)');
+    showStatus('installStatus', 'HTTPS is required for PWA installation', 'warning');
+}
+
+// Check display mode
+if (window.matchMedia('(display-mode: standalone)').matches) {
+    console.log('✓ App is already running in standalone mode (installed)');
+    showStatus('installStatus', 'Lemonade is already installed and running as an app', 'success');
+}
+
     </script>
 </body>
 </html>
