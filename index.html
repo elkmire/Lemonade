@@ -20,6 +20,7 @@
         :root {
             --bg-color: #ffffff;
             --text-color: #000000;
+            --title-gradient: linear-gradient(90deg, #33aaff, #0066cc);
             --card-bg: #ffffff;
             --accent-color: #000000;
             --border-color: #dddddd;
@@ -41,6 +42,7 @@
             :root {
                 --bg-color: #000000;
                 --text-color: #ffffff;
+                --title-gradient: linear-gradient(90deg, #FFFF00, #CCCC00);
                 --card-bg: #121212;
                 --accent-color: #FFFF00; /* Neon Yellow */
                 --border-color: #333333;
@@ -90,11 +92,20 @@
         .app-title {
             font-size: 1.8rem;
             margin: 0;
-            background: linear-gradient(90deg, #33aaff, #0066cc);
+            background: var(--title-gradient);
             -webkit-background-clip: text;
             background-clip: text;
             color: transparent;
             text-shadow: 0 0 15px var(--cyber-glow);
+        }
+
+        .app-subtitle {
+            font-size: 0.9rem;
+            margin: 0;
+            padding-top: 2px;
+            font-style: italic;
+            color: var(--text-color);
+            opacity: 0.8;
         }
         
         .app-header::after {
@@ -561,7 +572,8 @@
     <div class="container">
         <div class="app-header">
             <h1 class="app-title">Lemonade</h1>
-            <p>Secure Message Encryption & Decryption</p>
+            <div class="app-subtitle">by elkmire</div>
+            <p>for when SIGNAL fails</p>
         </div>
         
         <div class="tabs">
