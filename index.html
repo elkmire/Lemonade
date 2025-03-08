@@ -1034,8 +1034,8 @@
             }
         };
         
-        // Initialize
-        document.addEventListener('DOMContentLoaded', async () => {
+            // Initialize
+            document.addEventListener('DOMContentLoaded', async () => {
             // Set up tabs - Using direct event binding for more reliable tab switching
             document.querySelectorAll('.tab-btn').forEach(btn => {
                 btn.addEventListener('click', (e) => {
@@ -1044,8 +1044,11 @@
                     console.log('Tab button clicked:', tabId);
                     switchTab(tabId);
                 });
-            document.getElementById('checkUpdatesBtn').addEventListener('click', checkForPWAUpdates);
             });
+            
+
+            document.getElementById('checkUpdatesBtn').addEventListener('click', checkForPWAUpdates);
+            
             
             // Set up database
             await initDatabase();
@@ -2806,170 +2809,200 @@
         window.exportKey = exportKey;
         window.deleteKey = deleteKey;
     </script>
-    <script>
-        // PWA Support - Inline Service Worker and Manifest
-        (function() {
-            // Generate and register a manifest from our JSON
-            function registerManifest() {
-                const manifestData = document.getElementById('pwa-manifest').textContent;
-                const manifestBlob = new Blob([manifestData], {type: 'application/json'});
-                const manifestURL = URL.createObjectURL(manifestBlob);
-                
-                const link = document.createElement('link');
-                link.rel = 'manifest';
-                link.href = manifestURL;
-                document.head.appendChild(link);
-            }
+<script>
+    // PWA Support - Inline Service Worker registration using data URI approach
+    (function() {
+        // Generate and register a manifest from our JSON
+        function registerManifest() {
+            const manifestData = document.getElementById('pwa-manifest').textContent;
+            const manifestBlob = new Blob([manifestData], {type: 'application/json'});
+            const manifestURL = URL.createObjectURL(manifestBlob);
             
-            // Register the service worker
-            async function registerServiceWorker() {
-                if ('serviceWorker' in navigator) {
-                    try {
-                        // Create inline service worker from JavaScript
-                        const swCode = `
-                            const CACHE_NAME = 'Lemonade-cache-v1';
-                            const urlsToCache = [
-                                './',
-                                './?source=pwa'
-                            ];
-                            
-                            self.addEventListener('install', (event) => {
-                                event.waitUntil(
-                                    caches.open(CACHE_NAME)
-                                        .then((cache) => {
-                                            return cache.addAll(urlsToCache);
-                                        })
-                                );
-                            });
-                            
-                            self.addEventListener('fetch', (event) => {
-                                event.respondWith(
-                                    caches.match(event.request)
-                                        .then((response) => {
-                                            // Cache hit - return response
-                                            if (response) {
-                                                return response;
-                                            }
-                                            
-                                            return fetch(event.request).then(
-                                                (response) => {
-                                                    // Don't cache non-success responses or cross-origin requests
-                                                    if (!response || response.status !== 200 || response.type !== 'basic') {
-                                                        return response;
-                                                    }
-                                                    
-                                                    // Clone the response since it can only be consumed once
-                                                    const responseToCache = response.clone();
-                                                    
-                                                    caches.open(CACHE_NAME)
-                                                        .then((cache) => {
-                                                            cache.put(event.request, responseToCache);
-                                                        });
-                                                        
+            const link = document.createElement('link');
+            link.rel = 'manifest';
+            link.href = manifestURL;
+            document.head.appendChild(link);
+        }
+        
+        // Register the service worker using a data URI
+        async function registerServiceWorker() {
+            if ('serviceWorker' in navigator) {
+                try {
+                    // Service worker code as a string
+                    const swCode = `
+                        const CACHE_NAME = 'Lemonade-cache-v1';
+                        const urlsToCache = [
+                            './',
+                            './?source=pwa'
+                        ];
+                        
+                        self.addEventListener('install', (event) => {
+                            event.waitUntil(
+                                caches.open(CACHE_NAME)
+                                    .then((cache) => {
+                                        return cache.addAll(urlsToCache);
+                                    })
+                            );
+                        });
+                        
+                        self.addEventListener('fetch', (event) => {
+                            event.respondWith(
+                                caches.match(event.request)
+                                    .then((response) => {
+                                        // Cache hit - return response
+                                        if (response) {
+                                            return response;
+                                        }
+                                        
+                                        return fetch(event.request).then(
+                                            (response) => {
+                                                // Don't cache non-success responses or cross-origin requests
+                                                if (!response || response.status !== 200 || response.type !== 'basic') {
                                                     return response;
                                                 }
-                                            );
-                                        })
-                                );
-                            });
-                            
-                            self.addEventListener('activate', (event) => {
-                                const cacheWhitelist = [CACHE_NAME];
-                                
-                                event.waitUntil(
-                                    caches.keys().then((cacheNames) => {
-                                        return Promise.all(
-                                            cacheNames.map((cacheName) => {
-                                                if (cacheWhitelist.indexOf(cacheName) === -1) {
-                                                    return caches.delete(cacheName);
-                                                }
-                                            })
+                                                
+                                                // Clone the response since it can only be consumed once
+                                                const responseToCache = response.clone();
+                                                
+                                                caches.open(CACHE_NAME)
+                                                    .then((cache) => {
+                                                        cache.put(event.request, responseToCache);
+                                                    });
+                                                    
+                                                return response;
+                                            }
                                         );
                                     })
-                                );
-                            });
-                        `;
+                            );
+                        });
                         
-                        // Convert the service worker code to a Blob URL
-                        const swBlob = new Blob([swCode], {type: 'application/javascript'});
-                        const swUrl = URL.createObjectURL(swBlob);
-                        
-                        // Register the service worker using the Blob URL
-                        const registration = await navigator.serviceWorker.register(swUrl, {scope: './'});
-                        console.log('Service Worker registered with scope:', registration.scope);
-                    } catch (error) {
-                        console.error('Service Worker registration failed:', error);
-                    }
+                        self.addEventListener('activate', (event) => {
+                            const cacheWhitelist = [CACHE_NAME];
+                            
+                            event.waitUntil(
+                                caches.keys().then((cacheNames) => {
+                                    return Promise.all(
+                                        cacheNames.map((cacheName) => {
+                                            if (cacheWhitelist.indexOf(cacheName) === -1) {
+                                                return caches.delete(cacheName);
+                                            }
+                                        })
+                                    );
+                                })
+                            );
+                        });
+                    `;
+                    
+                    // Create a data URI with the service worker code
+                    const dataUri = 'data:application/javascript;base64,' + btoa(swCode);
+                    
+                    // Inject a script tag that registers the service worker
+                    const script = document.createElement('script');
+                    script.textContent = `
+                        if ('serviceWorker' in navigator) {
+                            navigator.serviceWorker.register('${dataUri}')
+                                .then(registration => console.log('Service Worker registered with scope:', registration.scope))
+                                .catch(error => console.error('Service Worker registration failed:', error));
+                        }
+                    `;
+                    document.body.appendChild(script);
+                    
+                    console.log('Service Worker registration initiated');
+                } catch (error) {
+                    console.error('Service Worker setup failed:', error);
                 }
             }
-            
-            // Add install event and button for PWA installation
-            let deferredPrompt;
-            
-            function setupInstallButton() {
-                // Create install button (initially hidden)
-                const installContainer = document.createElement('div');
-                installContainer.style.cssText = 'position:fixed; bottom:20px; left:50%; transform:translateX(-50%); z-index:999; display:none;';
-                
-                const installButton = document.createElement('button');
-                installButton.textContent = 'Install Lemonade';
-                installButton.style.cssText = 'background-color:var(--button-bg); color:var(--button-text); border:none; border-radius:8px; padding:12px 24px; font-size:1rem; cursor:pointer; box-shadow:0 4px 12px rgba(0,0,0,0.2);';
-                
-                installContainer.appendChild(installButton);
-                document.body.appendChild(installContainer);
-                
-                // Listen for beforeinstallprompt event
-                window.addEventListener('beforeinstallprompt', (e) => {
-                    // Prevent default behavior
-                    e.preventDefault();
-                    
-                    // Store the event to use later
-                    deferredPrompt = e;
-                    
-                    // Show the install button
-                    installContainer.style.display = 'block';
-                });
-                
-                // Add click handler for install button
-                installButton.addEventListener('click', async () => {
-                    if (!deferredPrompt) return;
-                    
-                    // Show the installation prompt
-                    deferredPrompt.prompt();
-                    
-                    // Wait for the user to respond to the prompt
-                    const { outcome } = await deferredPrompt.userChoice;
-                    console.log(`User response to install prompt: ${outcome}`);
-                    
-                    // Clear the saved prompt - it can only be used once
-                    deferredPrompt = null;
-                    
-                    // Hide the button
-                    installContainer.style.display = 'none';
-                });
-                
-                // Hide the button if the app is installed
-                window.addEventListener('appinstalled', () => {
-                    console.log('PWA installed successfully');
-                    installContainer.style.display = 'none';
-                    deferredPrompt = null;
-                });
-            }
-            
-            // Initialize PWA features
-            function initPWA() {
-                registerManifest();
-                registerServiceWorker();
-                setupInstallButton();
-            }
-            
-            // Initialize when the page is loaded
-            if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', initPWA);
+        }
+        
+        // Update the checkForPWAUpdates function
+        window.checkForPWAUpdates = async function() {
+            if ('serviceWorker' in navigator) {
+                try {
+                    const registration = await navigator.serviceWorker.getRegistration();
+                    if (registration) {
+                        await registration.update();
+                        showStatus('pwaStatus', 'App updated to the latest version', 'success');
+                    } else {
+                        // If no service worker is registered, trigger a new registration
+                        registerServiceWorker();
+                        showStatus('pwaStatus', 'App registered and ready to install!', 'success');
+                    }
+                } catch (error) {
+                    console.error('Update check failed:', error);
+                    showStatus('pwaStatus', 'Update check failed: ' + error.message, 'error');
+                }
             } else {
-                initPWA();
+                showStatus('pwaStatus', 'Service workers not supported in this browser', 'warning');
             }
-        })();
-        </script>
+        };
+        
+        // Add install event and button for PWA installation
+        let deferredPrompt;
+        
+        function setupInstallButton() {
+            // Create install button (initially hidden)
+            const installContainer = document.createElement('div');
+            installContainer.style.cssText = 'position:fixed; bottom:20px; left:50%; transform:translateX(-50%); z-index:999; display:none;';
+            
+            const installButton = document.createElement('button');
+            installButton.textContent = 'Install Lemonade';
+            installButton.style.cssText = 'background-color:var(--button-bg); color:var(--button-text); border:none; border-radius:8px; padding:12px 24px; font-size:1rem; cursor:pointer; box-shadow:0 4px 12px rgba(0,0,0,0.2);';
+            
+            installContainer.appendChild(installButton);
+            document.body.appendChild(installContainer);
+            
+            // Listen for beforeinstallprompt event
+            window.addEventListener('beforeinstallprompt', (e) => {
+                // Prevent default behavior
+                e.preventDefault();
+                
+                // Store the event to use later
+                deferredPrompt = e;
+                
+                // Show the install button
+                installContainer.style.display = 'block';
+            });
+            
+            // Add click handler for install button
+            installButton.addEventListener('click', async () => {
+                if (!deferredPrompt) return;
+                
+                // Show the installation prompt
+                deferredPrompt.prompt();
+                
+                // Wait for the user to respond to the prompt
+                const { outcome } = await deferredPrompt.userChoice;
+                console.log(`User response to install prompt: ${outcome}`);
+                
+                // Clear the saved prompt - it can only be used once
+                deferredPrompt = null;
+                
+                // Hide the button
+                installContainer.style.display = 'none';
+            });
+            
+            // Hide the button if the app is installed
+            window.addEventListener('appinstalled', () => {
+                console.log('PWA installed successfully');
+                installContainer.style.display = 'none';
+                deferredPrompt = null;
+            });
+        }
+        
+        // Initialize PWA features
+        function initPWA() {
+            registerManifest();
+            registerServiceWorker();
+            setupInstallButton();
+        }
+        
+        // Initialize when the page is loaded
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initPWA);
+        } else {
+            initPWA();
+        }
+    })();
+    </script>
 </body>
 </html>
