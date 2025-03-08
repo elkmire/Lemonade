@@ -838,7 +838,7 @@
                     
                     <div class="form-group">
                         <p>Lemonade can be installed as an app on your device for offline use.</p>
-                        <button id="checkUpdatesBtn" class="btn-secondary">Install/Update</button>
+                        <button id="checkUpdatesBtn" class="btn-secondary">Install</button>
                     </div>
                     
                     <div id="pwaStatus" class="status"></div>
@@ -2819,12 +2819,11 @@
         // Make functions globally available for onclick handlers
         window.exportKey = exportKey;
         window.deleteKey = deleteKey;
-    </script>
-<script>
-    // PWA Support - Service Worker Setup
-    (function() {
-        // Service worker content as string
-        const swContent = `
+
+        document.addEventListener('DOMContentLoaded', function() {
+        if ('serviceWorker' in navigator) {
+            // Define the service worker code as string
+            const swContent = `
             const CACHE_NAME = 'lemonade-cache-v1';
             const urlsToCache = [
                 './',
@@ -2833,105 +2832,90 @@
             
             self.addEventListener('install', (event) => {
                 event.waitUntil(
-                    caches.open(CACHE_NAME)
-                        .then((cache) => {
-                            return cache.addAll(urlsToCache);
-                        })
+                caches.open(CACHE_NAME)
+                    .then((cache) => {
+                    return cache.addAll(urlsToCache);
+                    })
                 );
             });
             
             self.addEventListener('fetch', (event) => {
                 event.respondWith(
-                    caches.match(event.request)
-                        .then((response) => {
-                            if (response) {
-                                return response;
-                            }
-                            return fetch(event.request);
-                        })
+                caches.match(event.request)
+                    .then((response) => {
+                    if (response) {
+                        return response;
+                    }
+                    return fetch(event.request);
+                    })
                 );
             });
             
             self.addEventListener('activate', (event) => {
                 const cacheWhitelist = [CACHE_NAME];
                 event.waitUntil(
-                    caches.keys().then((cacheNames) => {
-                        return Promise.all(
-                            cacheNames.map((cacheName) => {
-                                if (cacheWhitelist.indexOf(cacheName) === -1) {
-                                    return caches.delete(cacheName);
-                                }
-                            })
-                        );
+                caches.keys().then((cacheNames) => {
+                    return Promise.all(
+                    cacheNames.map((cacheName) => {
+                        if (cacheWhitelist.indexOf(cacheName) === -1) {
+                        return caches.delete(cacheName);
+                        }
                     })
+                    );
+                })
                 );
             });
-        `;
-        
-        // Convert service worker content to blob and get URL
-        function createServiceWorkerBlob() {
-            const blob = new Blob([swContent], { type: 'application/javascript' });
-            return URL.createObjectURL(blob);
+            `;
+
+            // Create a Blob containing the service worker code
+            const swBlob = new Blob([swContent], {type: 'application/javascript'});
+            
+            // Create an object URL for the Blob
+            const swUrl = URL.createObjectURL(swBlob);
+            
+            // Register the service worker with the Blob URL
+            navigator.serviceWorker.register(swUrl)
+            .then(registration => {
+                console.log('Service Worker registered successfully:', registration.scope);
+                
+                // Clean up the Blob URL after the service worker is registered
+                URL.revokeObjectURL(swUrl);
+            })
+            .catch(error => {
+                console.error('Service Worker registration failed:', error);
+            });
         }
-        
-        // Install service worker using the blob URL
-        async function installServiceWorker() {
-            if ('serviceWorker' in navigator) {
-                try {
-                    // Create a virtual service worker file
-                    const swUrl = createServiceWorkerBlob();
-                    
-                    // Register the service worker
-                    const registration = await navigator.serviceWorker.register(swUrl);
-                    console.log('Service Worker registered successfully:', registration.scope);
-                    return registration;
-                } catch (error) {
-                    console.error('Service Worker registration failed:', error);
-                    return null;
-                }
-            } else {
-                console.warn('Service Workers not supported in this browser');
-                return null;
-            }
-        }
-        
-        // Create manifest.json from the JSON element
-        function createManifest() {
+
+        //Get manifest data from the embedded JSON and inject it inline
+        const manifestElement = document.getElementById('pwa-manifest');
+        if (manifestElement) {
             try {
-                // Get the manifest data from the script tag
-                const manifestElement = document.getElementById('pwa-manifest');
-                if (!manifestElement) {
-                    console.error('Manifest element not found');
-                    return null;
-                }
-                
-                const manifestData = manifestElement.textContent;
-                // Parse to validate and pretty-print
-                const manifestObj = JSON.parse(manifestData);
-                const formattedManifest = JSON.stringify(manifestObj, null, 2);
-                
-                // Create a blob URL for the manifest
-                const blob = new Blob([formattedManifest], { type: 'application/json' });
-                const manifestURL = URL.createObjectURL(blob);
-                
-                // Add the manifest link to the document head
-                const link = document.createElement('link');
-                link.rel = 'manifest';
-                link.href = manifestURL;
-                document.head.appendChild(link);
-                
-                return manifestURL;
+            // Parse the manifest data from the script element
+            const manifestObj = JSON.parse(manifestElement.textContent);
+            
+            // Convert to a properly formatted JSON string
+            const manifestString = JSON.stringify(manifestObj);
+            
+            // Create a data URL for the manifest
+            const dataUrl = 'data:application/json;base64,' + btoa(manifestString);
+            
+            // Create and append the manifest link
+            const manifestLink = document.createElement('link');
+            manifestLink.rel = 'manifest';
+            manifestLink.href = dataUrl;
+            document.head.appendChild(manifestLink);
+            
+            console.log('Web manifest added successfully');
             } catch (error) {
-                console.error('Error creating manifest:', error);
-                return null;
+            console.error('Error processing manifest:', error);
             }
         }
-        
-        // Track installation prompt event
+
+        // Handle installation prompt
         let deferredPrompt;
         
-        // Create floating install button
-        function createInstallButton() {
+        // Create floating install button if it doesn't exist
+        if (!document.getElementById('pwa-install-container')) {
             const container = document.createElement('div');
             container.id = 'pwa-install-container';
             container.style.cssText = 'position:fixed; bottom:20px; left:50%; transform:translateX(-50%); z-index:999; display:none;';
@@ -2943,118 +2927,71 @@
             
             container.appendChild(button);
             document.body.appendChild(container);
+        }
+
+        // Listen for the beforeinstallprompt event
+        window.addEventListener('beforeinstallprompt', (e) => {
+            // Prevent Chrome 67 and earlier from automatically showing the prompt
+            e.preventDefault();
             
-            // Add click handler
-            button.addEventListener('click', async () => {
-                if (!deferredPrompt) {
-                    showStatus('pwaStatus', 'App cannot be installed right now. Try again later.', 'warning');
-                    return;
+            // Stash the event so it can be triggered later
+            deferredPrompt = e;
+            
+            // Show the install button
+            document.getElementById('pwa-install-container').style.display = 'block';
+            
+            // Handler for install button click
+            document.getElementById('pwa-install-button').addEventListener('click', () => {
+            // Hide the app provided install prompt
+            document.getElementById('pwa-install-container').style.display = 'none';
+            
+            // Show the browser install prompt
+            deferredPrompt.prompt();
+            
+            // Wait for the user to respond to the prompt
+            deferredPrompt.userChoice.then((choiceResult) => {
+                if (choiceResult.outcome === 'accepted') {
+                console.log('User accepted the install prompt');
+                // Show status if the function exists
+                if (typeof showStatus === 'function') {
+                    showStatus('pwaStatus', 'App installed successfully!', 'success');
                 }
-                
-                // Show the browser's install prompt
-                deferredPrompt.prompt();
-                
-                // Wait for user's choice
-                const { outcome } = await deferredPrompt.userChoice;
-                console.log(`User response to PWA install prompt: ${outcome}`);
-                
+                } else {
+                console.log('User dismissed the install prompt');
+                }
                 // Clear the saved prompt
                 deferredPrompt = null;
-                
-                // Hide the install button
-                container.style.display = 'none';
-                
-                if (outcome === 'accepted') {
-                    showStatus('pwaStatus', 'Installation successful!', 'success');
-                } else {
-                    showStatus('pwaStatus', 'Installation cancelled', 'warning');
-                }
             });
-        }
-        
-        // Enhanced update check function that will be exposed globally
-        window.checkForPWAUpdates = async function() {
-            if ('serviceWorker' in navigator) {
-                try {
-                    // Check for existing registration
-                    const registration = await navigator.serviceWorker.getRegistration();
-                    
-                    if (registration) {
-                        // We have a service worker, update it
-                        await registration.update();
-                        showStatus('pwaStatus', 'App updated to the latest version.', 'success');
-                        
-                        // Show install button if available
-                        if (deferredPrompt) {
-                            document.getElementById('pwa-install-container').style.display = 'block';
-                            showStatus('pwaStatus', 'App is ready to install! Click Install button to proceed.', 'success');
-                        }
-                    } else {
-                        // No service worker registered, install one
-                        const newRegistration = await installServiceWorker();
-                        if (newRegistration) {
-                            showStatus('pwaStatus', 'App registered and ready to install!', 'success');
-                            
-                            // Show install button if available
-                            if (deferredPrompt) {
-                                document.getElementById('pwa-install-container').style.display = 'block';
-                                showStatus('pwaStatus', 'App is ready to install! Click Install button to proceed.', 'success');
-                            } else {
-                                showStatus('pwaStatus', 'App registered. Reload the page to enable installation.', 'success');
-                            }
-                        } else {
-                            showStatus('pwaStatus', 'Failed to register app. Try again or check browser compatibility.', 'error');
-                        }
-                    }
-                } catch (error) {
-                    console.error('PWA Update error:', error);
-                    showStatus('pwaStatus', 'Update check failed: ' + error.message, 'error');
-                }
+            });
+        });
+
+        // Handle app installed event
+        window.addEventListener('appinstalled', (event) => {
+            console.log('Lemonade has been installed');
+            // Hide install button if shown
+            document.getElementById('pwa-install-container').style.display = 'none';
+            // Show status if the function exists
+            if (typeof showStatus === 'function') {
+            showStatus('pwaStatus', 'App successfully installed!', 'success');
+            }
+        });
+
+        // Simplified update check function that just shows install button if available
+        window.checkForPWAUpdates = function() {
+            if (deferredPrompt) {
+            document.getElementById('pwa-install-container').style.display = 'block';
+            if (typeof showStatus === 'function') {
+                showStatus('pwaStatus', 'App is ready to install!', 'success');
+            }
             } else {
-                showStatus('pwaStatus', 'Service workers not supported in this browser.', 'warning');
+            if (typeof showStatus === 'function') {
+                showStatus('pwaStatus', 'App installation not available right now. Try refreshing the page.', 'warning');
+            }
             }
         };
-        
-        // Initialize the PWA functionality
-        async function initPWA() {
-            // Create and add manifest
-            createManifest();
-            
-            // Create install button (initially hidden)
-            createInstallButton();
-            
-            // Install service worker
-            await installServiceWorker();
-            
-            // Listen for beforeinstallprompt event
-            window.addEventListener('beforeinstallprompt', (e) => {
-                // Prevent default browser install prompt
-                e.preventDefault();
-                
-                // Store the event for later use
-                deferredPrompt = e;
-                console.log('Install prompt available, storing for later use');
-                
-                // Optionally show the install button now
-                document.getElementById('pwa-install-container').style.display = 'block';
-            });
-            
-            // Handle installed event
-            window.addEventListener('appinstalled', (event) => {
-                console.log('Lemonade has been installed!');
-                document.getElementById('pwa-install-container').style.display = 'none';
-                deferredPrompt = null;
-                showStatus('pwaStatus', 'App successfully installed!', 'success');
-            });
-        }
-        
-        // Start initialization
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', initPWA);
-        } else {
-            initPWA();
-        }
-    })();
+        });
+
     </script>
+
 </body>
 </html>
