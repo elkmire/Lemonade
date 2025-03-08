@@ -11,8 +11,9 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Lemonade">
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍋</text></svg>">
-    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍋</text></svg>">
+    <link rel="icon" href="icon.svg">
+    <link rel="apple-touch-icon" href="icon.svg">
+    <link rel="manifest" href="manifest.json">
     <title>Lemonade</title>
     <style>
         /* CSS with dark/light mode support */
@@ -2834,189 +2835,39 @@
             showStatus('installStatus', 'Lemonade has been installed successfully!', 'success');
         });
 
-        // Create and inject web manifest
-        function createManifest() {
-            const manifestContent = {
-                name: "Lemonade Encryption",
-                short_name: "Lemonade",
-                description: "Secure Message Encryption & Decryption",
-                start_url: "./",
-                display: "standalone",
-                background_color: "#000000",
-                theme_color: "#000000",
-                icons: [
-                    {
-                        src: "data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍋</text></svg>",
-                        sizes: "192x192",
-                        type: "image/svg+xml"
-                    }
-                ]
-            };
-            
-            const manifestBlob = new Blob([JSON.stringify(manifestContent)], {type: 'application/json'});
-            const manifestURL = URL.createObjectURL(manifestBlob);
-            
-            // Create link element for manifest
-            const linkElement = document.createElement('link');
-            linkElement.rel = 'manifest';
-            linkElement.href = manifestURL;
-            document.head.appendChild(linkElement);
-        }
-
         // Register service worker
-        async function registerServiceWorker() {
-            if ('serviceWorker' in navigator) {
-                try {
-                    // Create service worker content
-                    const swContent = `
-                        // Lemonade Service Worker
-                        const CACHE_NAME = 'lemonade-cache-v1';
-                        
-                        // Install event - cache app shell
-                        self.addEventListener('install', (event) => {
-                            event.waitUntil(
-                                caches.open(CACHE_NAME).then((cache) => {
-                                    return cache.add('./');
-                                })
-                            );
-                        });
-                        
-                        // Fetch event - serve from cache or network
-                        self.addEventListener('fetch', (event) => {
-                            event.respondWith(
-                                caches.match(event.request).then((response) => {
-                                    return response || fetch(event.request)
-                                        .then((fetchResponse) => {
-                                            // Don't cache API responses or analytics
-                                            if (event.request.url.includes('api/') || 
-                                                event.request.url.includes('analytics')) {
-                                                return fetchResponse;
-                                            }
-                                            
-                                            return caches.open(CACHE_NAME).then((cache) => {
-                                                cache.put(event.request, fetchResponse.clone());
-                                                return fetchResponse;
-                                            });
-                                        });
-                                }).catch(() => {
-                                    // Fallback for offline
-                                    if (event.request.destination === 'document') {
-                                        return caches.match('./');
-                                    }
-                                })
-                            );
-                        });
-                        
-                        // Activate event - clean up old caches
-                        self.addEventListener('activate', (event) => {
-                            event.waitUntil(
-                                caches.keys().then((cacheNames) => {
-                                    return Promise.all(
-                                        cacheNames.map((cacheName) => {
-                                            if (cacheName !== CACHE_NAME) {
-                                                return caches.delete(cacheName);
-                                            }
-                                        })
-                                    );
-                                })
-                            );
-                        });
-                    `;
-                    
-                    // Create blob for service worker
-                    const swBlob = new Blob([swContent], {type: 'application/javascript'});
-                    const swURL = URL.createObjectURL(swBlob);
-                    
-                    // Register the service worker
-                    const registration = await navigator.serviceWorker.register(swURL, {scope: './'});
-                    console.log('Service Worker registered with scope:', registration.scope);
-                } catch (error) {
-                    console.error('Service Worker registration failed:', error);
+        if ('serviceWorker' in navigator && (window.location.protocol === 'https:' || 
+            window.location.hostname === 'localhost' || 
+            window.location.hostname === '127.0.0.1')) {
+            
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('sw.js')
+                    .then(function(registration) {
+                        console.log('Service Worker registered with scope:', registration.scope);
+                    })
+                    .catch(function(error) {
+                        console.error('Service Worker registration failed:', error);
+                        showStatus('installStatus', 'Service Worker registration failed. PWA features unavailable.', 'warning');
+                    });
+            });
+        } else {
+            console.log('Service Workers not supported or not in secure context');
+            if (installStatus) {
+                if (window.location.protocol === 'file:') {
+                    showStatus('installStatus', 'PWA installation requires HTTPS. You are viewing this file locally.', 'warning');
+                } else {
+                    showStatus('installStatus', 'Your browser does not support PWA installation features.', 'warning');
                 }
             }
         }
 
-        // Handle PWA installation
-        window.addEventListener('beforeinstallprompt', (e) => {
-            // Prevent Chrome 67+ from automatically showing the prompt
-            e.preventDefault();
-            
-            // Stash the event so it can be triggered later
-            deferredPrompt = e;
-            
-            // Show the install button
-            installContainer.style.display = 'block';
-        });
-
-        // Install button click handler
-        installBtn.addEventListener('click', async () => {
-            if (!deferredPrompt) {
-                showStatus('installStatus', 'Installation not available in this browser or app is already installed', 'warning');
-                return;
-            }
-            
-            // Show the install prompt
-            deferredPrompt.prompt();
-            
-            // Wait for the user to respond to the prompt
-            const { outcome } = await deferredPrompt.userChoice;
-            console.log(`User response to install prompt: ${outcome}`);
-            
-            if (outcome === 'accepted') {
-                showStatus('installStatus', 'Lemonade has been installed successfully!', 'success');
-            } else {
-                showStatus('installStatus', 'Installation was canceled', 'warning');
-            }
-            
-            // Clear the saved prompt since it can't be used again
-            deferredPrompt = null;
-            installContainer.style.display = 'none';
-        });
-
-        // Check if already installed
-        window.addEventListener('appinstalled', () => {
-            console.log('Lemonade was installed');
-            deferredPrompt = null;
-            installContainer.style.display = 'none';
-            showStatus('installStatus', 'Lemonade has been installed successfully!', 'success');
-        });
-
-        // Initialize PWA on load
-        document.addEventListener('DOMContentLoaded', async () => {
-            // Create and inject manifest
-            createManifest();
-            
-            // Register service worker
-            await registerServiceWorker();
-            
-            // If mobile and already installed via homescreen
-            if (window.matchMedia('(display-mode: standalone)').matches) {
-                console.log('App is running in standalone mode');
+        // Check display mode
+        if (window.matchMedia('(display-mode: standalone)').matches) {
+            console.log('App is already running in standalone mode (installed)');
+            if (installStatus) {
                 showStatus('installStatus', 'Lemonade is running as an installed app', 'success');
             }
-        });
-
-// Debug info for PWA installation
-if ('serviceWorker' in navigator) {
-    console.log('✓ Service Worker API is supported');
-} else {
-    console.log('✗ Service Worker API is not supported');
-    showStatus('installStatus', 'Your browser does not support Service Workers required for installation', 'warning');
-}
-
-// Check if running on HTTPS (required for PWA)
-if (window.location.protocol === 'https:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-    console.log('✓ Running in secure context (HTTPS or localhost)');
-} else {
-    console.log('✗ Not running in secure context (HTTPS required for PWA installation)');
-    showStatus('installStatus', 'HTTPS is required for PWA installation', 'warning');
-}
-
-// Check display mode
-if (window.matchMedia('(display-mode: standalone)').matches) {
-    console.log('✓ App is already running in standalone mode (installed)');
-    showStatus('installStatus', 'Lemonade is already installed and running as an app', 'success');
-}
+        }
 
     </script>
 </body>
