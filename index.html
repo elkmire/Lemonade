@@ -37,28 +37,27 @@
             --security-medium: #f0ad4e;
             --security-low: #cc3300;
         }
-        
-        @media (prefers-color-scheme: dark) {
-            :root {
-                --bg-color: #000000;
-                --text-color: #ffffff;
-                --title-gradient: linear-gradient(90deg, #FFFF00, #CCCC00);
-                --card-bg: #121212;
-                --accent-color: #FFFF00; /* Neon Yellow */
-                --border-color: #333333;
-                --input-bg: #1a1a1a;
-                --button-bg: #00FFFF; /* Neon Teal */
-                --button-text: #000000;
-                --button-hover: #FF00FF; /* Neon Purple */
-                --success-color: #39FF14; /* Neon Green */
-                --error-color: #FF3131; /* Neon Red */
-                --warning-color: #FFFF00; /* Neon Yellow */
-                --cyber-line: rgba(0, 255, 255, 0.2); /* Neon Teal */
-                --cyber-glow: rgba(255, 0, 255, 0.3); /* Neon Purple */
-                --security-high: #39FF14; /* Neon Green */
-                --security-medium: #FFFF00; /* Neon Yellow */
-                --security-low: #FF3131; /* Neon Red */
-            }
+
+        /* Dark mode class */
+        body.dark-mode {
+            --bg-color: #000000;
+            --text-color: #ffffff;
+            --title-gradient: linear-gradient(90deg, #FFFF00, #CCCC00);
+            --card-bg: #121212;
+            --accent-color: #FFFF00; /* Neon Yellow */
+            --border-color: #333333;
+            --input-bg: #1a1a1a;
+            --button-bg: #00FFFF; /* Neon Teal */
+            --button-text: #000000;
+            --button-hover: #FF00FF; /* Neon Purple */
+            --success-color: #39FF14; /* Neon Green */
+            --error-color: #FF3131; /* Neon Red */
+            --warning-color: #FFFF00; /* Neon Yellow */
+            --cyber-line: rgba(0, 255, 255, 0.2); /* Neon Teal */
+            --cyber-glow: rgba(255, 0, 255, 0.3); /* Neon Purple */
+            --security-high: #39FF14; /* Neon Green */
+            --security-medium: #FFFF00; /* Neon Yellow */
+            --security-low: #FF3131; /* Neon Red */
         }
         
         body {
@@ -573,7 +572,7 @@
         <div class="app-header">
             <h1 class="app-title">Lemonade</h1>
             <div class="app-subtitle">by elkmire</div>
-            <p>for when SIGNAL fails</p>
+            <p>Your alternate encryption system</p>
         </div>
         
         <div class="tabs">
@@ -588,6 +587,7 @@
                 <div class="form-group">
                     <label for="encryptMessage">Message to Encrypt</label>
                     <textarea id="encryptMessage" placeholder="Type your message here..."></textarea>
+                    <button id="clearEncryptMessageBtn" class="btn-secondary" style="margin-top: 5px;">Clear Message</button>
                 </div>
                 
                 <div class="form-group">
@@ -623,6 +623,7 @@
                 <div class="form-group">
                     <label for="encryptedMessage">Encrypted Message</label>
                     <textarea id="encryptedMessage" placeholder="Paste the encrypted message here..."></textarea>
+                    <button id="clearEncryptedMessageBtn" class="btn-secondary" style="margin-top: 5px;">Clear Message</button>
                 </div>
                 
                 <div class="form-group">
@@ -771,47 +772,16 @@
                         </select>
                     </div>
                 </div>
-                
+
                 <div class="settings-section">
-                    <h3>Auto-Timeout</h3>
+                    <h3>Appearance</h3>
                     
                     <div class="config-toggle">
-                        <label for="enableInactivityTimeout">Enable inactivity timeout</label>
+                        <label for="darkMode">Dark Mode</label>
                         <label class="switch">
-                            <input type="checkbox" id="enableInactivityTimeout" checked>
+                            <input type="checkbox" id="darkMode">
                             <span class="slider"></span>
                         </label>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="inactivityTimeout">Timeout after inactivity (seconds)</label>
-                        <select id="inactivityTimeout">
-                            <option value="60">1 minute</option>
-                            <option value="180">3 minutes</option>
-                            <option value="300" selected>5 minutes</option>
-                            <option value="600">10 minutes</option>
-                        </select>
-                    </div>
-                </div>
-                
-                <div class="settings-section">
-                    <h3>Data Protection</h3>
-                    
-                    <div class="config-toggle">
-                        <label for="clearClipboard">Auto-clear clipboard after copying sensitive data</label>
-                        <label class="switch">
-                            <input type="checkbox" id="clearClipboard" checked>
-                            <span class="slider"></span>
-                        </label>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="clearClipboardDelay">Clear clipboard after (seconds)</label>
-                        <select id="clearClipboardDelay">
-                            <option value="10">10 seconds</option>
-                            <option value="30" selected>30 seconds</option>
-                            <option value="60">1 minute</option>
-                        </select>
                     </div>
                 </div>
 
@@ -839,15 +809,6 @@
     
     <div class="loading-overlay" id="loadingOverlay">
         <div class="spinner"></div>
-    </div>
-    
-    <div id="inactivityModal">
-        <div class="modal-content">
-            <h2>Session Timeout</h2>
-            <p>For security, your session will be locked due to inactivity in</p>
-            <div id="timeoutTimer" class="timer">30</div>
-            <button id="continueSessionBtn">Continue Session</button>
-        </div>
     </div>
     
     <script>
@@ -890,19 +851,12 @@
             enforcePwdProtection: false,
             enforceKeyExpiry: false,
             pbkdf2Iterations: 100000,
-            enableInactivityTimeout: true,
-            inactivityTimeout: 300, // seconds
-            clearClipboard: true,
-            clearClipboardDelay: 30 // seconds
         };
         
         // Global variables
         let db = null;
         let keys = [];
         let appSettings = { ...DEFAULT_SETTINGS };
-        let inactivityTimer = null;
-        let inactivityTimeout = null;
-        let clipboardClearTimer = null;
         
         // Elements
         const tabBtns = document.querySelectorAll('.tab-btn');
@@ -1039,6 +993,23 @@
                     switchTab(tabId);
                 });
             });
+
+            // Setup dark mode toggle
+            document.getElementById('darkMode').addEventListener('change', toggleDarkMode);
+            // Check for saved theme preference
+            const savedTheme = localStorage.getItem('LemonadeDarkMode');
+            if (savedTheme === 'true') {
+                document.getElementById('darkMode').checked = true;
+                document.body.classList.add('dark-mode');
+            }
+
+            // Clear message buttons
+            document.getElementById('clearEncryptMessageBtn').addEventListener('click', () => {
+                document.getElementById('encryptMessage').value = '';
+            });
+            document.getElementById('clearEncryptedMessageBtn').addEventListener('click', () => {
+                document.getElementById('encryptedMessage').value = '';
+            });
             
             // Set up database
             await initDatabase();
@@ -1077,19 +1048,11 @@
             document.getElementById('exportAllKeysBtn').addEventListener('click', exportAllKeys);
             document.getElementById('saveSettingsBtn').addEventListener('click', saveSettings);
             document.getElementById('resetSettingsBtn').addEventListener('click', resetSettings);
-            document.getElementById('continueSessionBtn').addEventListener('click', continueSession);
             
             // Key select changes
             encryptionKeySelect.addEventListener('change', handleEncryptionKeyChange);
             decryptionKeySelect.addEventListener('change', handleDecryptionKeyChange);
-            
-            // Setup inactivity detection if enabled
-            setupInactivityDetection();
-            
-            // Listen for user activity
-            ['click', 'mousemove', 'keydown', 'touchstart'].forEach(eventType => {
-                document.addEventListener(eventType, resetInactivityTimer);
-            });
+
         });
         
         // Database Initialization
@@ -1204,10 +1167,6 @@
             document.getElementById('enforcePwdProtection').checked = appSettings.enforcePwdProtection;
             document.getElementById('enforceKeyExpiry').checked = appSettings.enforceKeyExpiry;
             document.getElementById('pbkdf2Iterations').value = appSettings.pbkdf2Iterations;
-            document.getElementById('enableInactivityTimeout').checked = appSettings.enableInactivityTimeout;
-            document.getElementById('inactivityTimeout').value = appSettings.inactivityTimeout;
-            document.getElementById('clearClipboard').checked = appSettings.clearClipboard;
-            document.getElementById('clearClipboardDelay').value = appSettings.clearClipboardDelay;
         }
         
         async function saveSettings() {
@@ -1218,10 +1177,6 @@
                 appSettings.enforcePwdProtection = document.getElementById('enforcePwdProtection').checked;
                 appSettings.enforceKeyExpiry = document.getElementById('enforceKeyExpiry').checked;
                 appSettings.pbkdf2Iterations = parseInt(document.getElementById('pbkdf2Iterations').value);
-                appSettings.enableInactivityTimeout = document.getElementById('enableInactivityTimeout').checked;
-                appSettings.inactivityTimeout = parseInt(document.getElementById('inactivityTimeout').value);
-                appSettings.clearClipboard = document.getElementById('clearClipboard').checked;
-                appSettings.clearClipboardDelay = parseInt(document.getElementById('clearClipboardDelay').value);
                 
                 // Update PBKDF2 iterations
                 PBKDF2_CONFIG.ITERATIONS = appSettings.pbkdf2Iterations;
@@ -1232,9 +1187,6 @@
                 } else {
                     localStorage.setItem('LemonadeSettings', JSON.stringify(appSettings));
                 }
-                
-                // Reconfigure inactivity detection based on new settings
-                setupInactivityDetection();
                 
                 showStatus('settingsStatus', 'Settings saved successfully', 'success');
             } catch (error) {
@@ -1250,100 +1202,6 @@
             appSettings = { ...DEFAULT_SETTINGS };
             initSettingsUI();
             saveSettings();
-        }
-        
-        // Inactivity detection
-        function setupInactivityDetection() {
-            // Clear any existing timers
-            if (inactivityTimer) clearTimeout(inactivityTimer);
-            if (inactivityTimeout) clearTimeout(inactivityTimeout);
-            
-            // Setup new timer if enabled
-            if (appSettings.enableInactivityTimeout) {
-                resetInactivityTimer();
-            }
-        }
-        
-        function resetInactivityTimer() {
-            if (!appSettings.enableInactivityTimeout) return;
-            
-            // Clear existing timers
-            if (inactivityTimer) clearTimeout(inactivityTimer);
-            if (inactivityTimeout) clearTimeout(inactivityTimeout);
-            
-            // Set new timer
-            inactivityTimer = setTimeout(() => {
-                showInactivityWarning();
-            }, appSettings.inactivityTimeout * 1000);
-        }
-        
-        function showInactivityWarning() {
-            // Show modal
-            inactivityModal.style.display = 'flex';
-            
-            // Start countdown (30 seconds)
-            let timeLeft = 30;
-            timeoutTimer.textContent = timeLeft;
-            
-            const countDown = () => {
-                timeLeft--;
-                timeoutTimer.textContent = timeLeft;
-                
-                if (timeLeft <= 0) {
-                    // Lock session
-                    lockSession();
-                }
-            };
-            
-            inactivityTimeout = setInterval(countDown, 1000);
-        }
-        
-        function continueSession() {
-            // Hide modal
-            inactivityModal.style.display = 'none';
-            
-            // Clear timeout
-            if (inactivityTimeout) {
-                clearInterval(inactivityTimeout);
-                inactivityTimeout = null;
-            }
-            
-            // Reset timer
-            resetInactivityTimer();
-        }
-        
-        function lockSession() {
-            // Clear sensitive data
-            document.getElementById('encryptMessage').value = '';
-            document.getElementById('encryptedOutput').value = '';
-            document.getElementById('encryptedMessage').value = '';
-            document.getElementById('decryptedOutput').value = '';
-            document.getElementById('keyPassword').value = '';
-            document.getElementById('confirmKeyPassword').value = '';
-            document.getElementById('encryptionPassword').value = '';
-            document.getElementById('decryptionPassword').value = '';
-            
-            // Clear any in-memory sensitive data
-            safeMemory.clearAll();
-            
-            // Hide modal
-            inactivityModal.style.display = 'none';
-            
-            // Clear timeout
-            if (inactivityTimeout) {
-                clearInterval(inactivityTimeout);
-                inactivityTimeout = null;
-            }
-            
-            // Show locked notification
-            showStatus('encryptStatus', 'Session locked due to inactivity. Sensitive data has been cleared.', 'warning');
-            showStatus('decryptStatus', 'Session locked due to inactivity. Sensitive data has been cleared.', 'warning');
-            
-            // Switch to encrypt tab
-            switchTab('encrypt');
-            
-            // Reset timer for next inactivity
-            resetInactivityTimer();
         }
         
         // Password strength meter
@@ -2505,24 +2363,6 @@
             }
         }
         
-        function scheduleClipboardClear() {
-            // Clear any existing timer
-            if (clipboardClearTimer) {
-                clearTimeout(clipboardClearTimer);
-            }
-            
-            // Set new timer
-            clipboardClearTimer = setTimeout(async () => {
-                try {
-                    // Try to clear clipboard by writing empty string
-                    await navigator.clipboard.writeText('');
-                    console.log('Clipboard cleared for security');
-                } catch (error) {
-                    console.log('Could not auto-clear clipboard:', error);
-                }
-            }, appSettings.clearClipboardDelay * 1000);
-        }
-        
         function deleteKey(keyId) {
             const keyData = keys.find(k => k.id === keyId);
             if (!keyData) {
@@ -2576,6 +2416,16 @@
                 element.focus();
                 element.select();
             }
+        }
+
+        function toggleDarkMode() {
+            const darkModeEnabled = document.getElementById('darkMode').checked;
+            if (darkModeEnabled) {
+                document.body.classList.add('dark-mode');
+            } else {
+                document.body.classList.remove('dark-mode');
+            }
+            localStorage.setItem('LemonadeDarkMode', darkModeEnabled);
         }
         
         // Crypto Helper Functions
