@@ -16,8 +16,6 @@
 6. [Security Settings](#security-settings)
    - [Storage Options](#storage-options)
    - [Security Parameters](#security-parameters)
-   - [Auto-Timeout](#auto-timeout)
-   - [Data Protection](#data-protection)
 7. [Progressive Web App Features](#progressive-web-app-features)
 8. [Security Best Practices](#security-best-practices)
 9. [Troubleshooting](#troubleshooting)
@@ -157,16 +155,6 @@ Navigate to the **Settings** tab to configure security options.
 - **Enforce password protection for keys**: Requires all keys to have password protection
 - **Enforce key expiration**: Requires all keys to have an expiration date
 - **PBKDF2 Iterations**: Higher values provide stronger protection against brute-force attacks (at the cost of performance)
-
-### Auto-Timeout
-
-- **Enable inactivity timeout**: Automatically locks the application after a period of inactivity
-- **Timeout after inactivity**: Sets the duration before the timeout occurs
-
-### Data Protection
-
-- **Auto-clear clipboard**: Automatically clears sensitive data from the clipboard after a set period
-- **Clear clipboard after**: Sets the duration before clipboard clearing occurs
 
 ## Progressive Web App Features
 
