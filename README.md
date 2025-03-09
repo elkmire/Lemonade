@@ -30,9 +30,8 @@ Lemonade is a secure, browser-based application for message encryption and decry
 - Local-only storage of encryption keys
 - Password protection for sensitive keys
 - Key management with expiration dates
-- Progressive Web App capabilities for offline use
+- Progressive Web App capabilities for offline use (android/chromium)
 - Dark/light mode support
-- Session timeout for additional security
 
 ## Getting Started
 
@@ -179,7 +178,6 @@ For maximum security when using Lemonade:
 7. **Back up your keys** securely with password protection
 8. **Don't share your private keys** or passwords through insecure channels
 9. **Verify key IDs** when decrypting to ensure you're using the correct key
-10. **Enable auto-clear clipboard** to prevent sensitive data from lingering
 
 ## Troubleshooting
 
