@@ -20,7 +20,7 @@
         :root {
             --bg-color: #ffffff;
             --text-color: #000000;
-            --title-gradient: linear-gradient(90deg, #33aaff, #0066cc);
+            --title-gradient: linear-gradient(90deg, #000000, #000000);
             --card-bg: #ffffff;
             --accent-color: #000000;
             --border-color: #dddddd;
@@ -59,35 +59,6 @@
             --security-medium: #FFFF00; /* Neon Yellow */
             --security-low: #FF3131; /* Neon Red */
         }
-
-@keyframes neonTitleChange {
-    0% {
-        background: linear-gradient(90deg, #FFFF00, #CCCC00); /* Neon Yellow */
-        text-shadow: 0 0 15px rgba(255, 255, 0, 0.7);
-    }
-    33% {
-        background: linear-gradient(90deg, #00FFFF, #0088FF); /* Neon Blue */
-        text-shadow: 0 0 15px rgba(0, 255, 255, 0.7);
-    }
-    66% {
-        background: linear-gradient(90deg, #FF00FF, #FF0088); /* Neon Pink */
-        text-shadow: 0 0 15px rgba(255, 0, 255, 0.7);
-    }
-    100% {
-        background: linear-gradient(90deg, #FFFF00, #CCCC00); /* Back to Yellow */
-        text-shadow: 0 0 15px rgba(255, 255, 0, 0.7);
-    }
-}
-
-body.dark-mode .app-title {
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-    animation: neonTitleChange 8s infinite;
-    animation-timing-function: ease-in-out;
-    -webkit-animation: neonTitleChange 8s infinite;
-    -webkit-animation-timing-function: ease-in-out;
-}
         
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
