@@ -146,8 +146,10 @@ Navigate to the **Settings** tab to configure security options.
 
 ### Storage Options
 
-- **Use IndexedDB for key storage**: Provides more secure storage than localStorage
-- **Session-only mode**: Keys aren't saved when the browser closes (maximum security)
+- **Use IndexedDB for key storage**: Provides more secure storage than localStorage (Default ON)
+- **Session-only mode**: Keys aren't saved when the browser closes (maximum security) (Default OFF)
+
+*Settings MUST be saved for these changes to take affect.
 
 ### Security Parameters
 
@@ -159,11 +161,15 @@ Navigate to the **Settings** tab to configure security options.
 
 Lemonade can be installed as a Progressive Web App (PWA), allowing it to run offline and providing a more app-like experience:
 
+*MUST use chromium-based (Edge, Chrome, etc) on Desktop/Android.
+
 1. Go to the **Settings** tab
-2. Under **Progressive Web App**, click **Install/Update**
+2. Under **Progressive Web App**, click **Install**
 3. Follow the browser prompts to install the application
 
 You can also install the PWA through your browser's interface (usually an icon in the address bar).
+
+IOS platform requires using Safari to install PWA apps.
 
 ## Security Best Practices
 
