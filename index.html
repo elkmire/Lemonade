@@ -2307,7 +2307,7 @@
         }
 
         // File download functions
-        function downloadEncryptedFile() {
+        function downloadEncryptedFile() {function downloadEncryptedFile() {
             const encryptedOutput = document.getElementById('encryptedOutput').value;
             if (!encryptedOutput) {
                 showStatus('encryptStatus', 'No encrypted data to download', 'error');
@@ -2315,7 +2315,10 @@
             }
             
             const filename = document.getElementById('downloadEncryptedBtn').getAttribute('data-filename') || generateRandomFileName(6) + '.lmn';
-            const blob = new Blob([encryptedOutput], { type: 'text/plain' });
+            
+            // Changed from 'text/plain' to 'application/octet-stream' to prevent
+            // browsers from appending '.txt' extension
+            const blob = new Blob([encryptedOutput], { type: 'application/octet-stream' });
             downloadBlob(blob, filename);
             
             showStatus('encryptStatus', `File "${filename}" downloaded successfully`, 'success');
@@ -2325,7 +2328,7 @@
             if (window.decryptedBinaryData) {
                 // Binary file
                 const filename = document.getElementById('downloadDecryptedBtn').getAttribute('data-filename') || 'decrypted_file';
-                const blob = new Blob([window.decryptedBinaryData]);
+                const blob = new Blob([window.decryptedBinaryData], { type: 'application/octet-stream' });
                 downloadBlob(blob, filename);
             } else {
                 // Text file
@@ -2336,7 +2339,8 @@
                 }
                 
                 const filename = document.getElementById('downloadDecryptedBtn').getAttribute('data-filename') || 'decrypted.txt';
-                const blob = new Blob([decryptedOutput], { type: 'text/plain' });
+                // Also change MIME type here for consistency
+                const blob = new Blob([decryptedOutput], { type: 'application/octet-stream' });
                 downloadBlob(blob, filename);
             }
             
