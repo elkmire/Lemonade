@@ -565,6 +565,40 @@
                 font-size: 0.9rem;
             }
         }
+
+    .file-info {
+        margin-top: 10px;
+        font-size: 0.9rem;
+        background-color: var(--input-bg);
+        padding: 8px;
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .file-info-name {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .file-icon {
+        margin-right: 8px;
+        font-size: 1.2rem;
+    }
+
+    .remove-file {
+        cursor: pointer;
+        color: var(--error-color);
+        padding: 2px 6px;
+        border-radius: 4px;
+        margin-left: 8px;
+    }
+
+    .remove-file:hover {
+        background-color: rgba(204, 51, 0, 0.1);
+    }
     </style>
 </head>
 <body>
@@ -585,9 +619,17 @@
         <div class="tab-content active" id="encrypt">
             <div class="card">
                 <div class="form-group">
-                    <label for="encryptMessage">Message to Encrypt</label>
-                    <textarea id="encryptMessage" placeholder="Type your message here..."></textarea>
-                    <button id="clearEncryptMessageBtn" class="btn-secondary" style="margin-top: 5px;">Clear Message</button>
+                    <label for="encryptMessage">To Encrypt</label>
+                    <textarea id="encryptMessage" placeholder="Free-type here or load file for encryption..."></textarea>
+                    <div style="display: flex; gap: 10px; margin-top: 5px;">
+                        <button id="encryptBrowseBtn" class="btn-secondary">Browse Files</button>
+                        <button id="clearEncryptMessageBtn" class="btn-secondary">Clear</button>
+                        <input type="file" id="encryptFileInput" style="display: none;">
+                    </div>
+                    <div id="encryptFileInfo" style="display: none;" class="file-info">
+                        <span><span class="file-icon">📄</span> <span id="encryptFileName" class="file-info-name"></span></span>
+                        <span class="remove-file" id="removeEncryptFile">×</span>
+                    </div>
                 </div>
                 
                 <div class="form-group">
@@ -602,28 +644,46 @@
                     <input type="password" id="encryptionPassword" placeholder="Enter key password">
                 </div>
                 
-                <button id="encryptBtn">Encrypt Message</button>
+                <button id="encryptBtn">Encrypt Data</button>
                 
                 <div class="form-group" style="margin-top: 20px;">
-                    <label for="encryptedOutput">Encrypted Message</label>
+                    <label for="encryptedOutput">Encrypted Data</label>
                     <textarea id="encryptedOutput" readonly></textarea>
                 </div>
                 
                 <div class="btn-group">
+                    <button id="downloadEncryptedBtn" class="btn-secondary">Download Encrypted File</button>
                     <button id="copyEncryptedBtn" class="btn-secondary">Copy to Clipboard</button>
                     <button id="clearEncryptBtn" class="btn-secondary">Clear All</button>
                 </div>
                 
                 <div id="encryptStatus" class="status"></div>
+                <div id="encryptProgressContainer" style="display: none; margin-top: 15px;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                        <span>Processing file...</span>
+                        <span id="encryptProgressText">0%</span>
+                    </div>
+                    <div style="height: 10px; background-color: var(--border-color); border-radius: 5px; overflow: hidden;">
+                        <div id="encryptProgressBar" style="height: 100%; width: 0%; background-color: var(--accent-color); transition: width 0.3s;"></div>
+                    </div>
+                </div>
             </div>
         </div>
         
         <div class="tab-content" id="decrypt">
             <div class="card">
                 <div class="form-group">
-                    <label for="encryptedMessage">Encrypted Message</label>
-                    <textarea id="encryptedMessage" placeholder="Paste the encrypted message here..."></textarea>
-                    <button id="clearEncryptedMessageBtn" class="btn-secondary" style="margin-top: 5px;">Clear Message</button>
+                    <label for="encryptedMessage">To Decrypt</label>
+                    <textarea id="encryptedMessage" placeholder="Paste the encrypted data here or load encrypted data..."></textarea>
+                    <div style="display: flex; gap: 10px; margin-top: 5px;">
+                        <button id="decryptBrowseBtn" class="btn-secondary">Browse Files</button>
+                        <button id="clearEncryptedMessageBtn" class="btn-secondary">Clear</button>
+                        <input type="file" id="decryptFileInput" style="display: none;">
+                    </div>
+                    <div id="decryptFileInfo" style="display: none;" class="file-info">
+                        <span><span class="file-icon">📄</span> <span id="decryptFileName" class="file-info-name"></span></span>
+                        <span class="remove-file" id="removeDecryptFile">×</span>
+                    </div>
                 </div>
                 
                 <div class="form-group">
@@ -638,19 +698,29 @@
                     <input type="password" id="decryptionPassword" placeholder="Enter key password">
                 </div>
                 
-                <button id="decryptBtn">Decrypt Message</button>
+                <button id="decryptBtn">Decrypt Data</button>
                 
                 <div class="form-group" style="margin-top: 20px;">
-                    <label for="decryptedOutput">Decrypted Message</label>
+                    <label for="decryptedOutput">Decrypted Data</label>
                     <textarea id="decryptedOutput" readonly></textarea>
                 </div>
                 
                 <div class="btn-group">
+                    <button id="downloadDecryptedBtn" class="btn-secondary">Download Decrypted File</button>
                     <button id="copyDecryptedBtn" class="btn-secondary">Copy to Clipboard</button>
                     <button id="clearDecryptBtn" class="btn-secondary">Clear All</button>
                 </div>
                 
                 <div id="decryptStatus" class="status"></div>
+                <div id="decryptProgressContainer" style="display: none; margin-top: 15px;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                        <span>Processing file...</span>
+                        <span id="decryptProgressText">0%</span>
+                    </div>
+                    <div style="height: 10px; background-color: var(--border-color); border-radius: 5px; overflow: hidden;">
+                        <div id="decryptProgressBar" style="height: 100%; width: 0%; background-color: var(--accent-color); transition: width 0.3s;"></div>
+                    </div>
+                </div>
             </div>
         </div>
         
@@ -1006,10 +1076,10 @@
 
             // Clear message buttons
             document.getElementById('clearEncryptMessageBtn').addEventListener('click', () => {
-                document.getElementById('encryptMessage').value = '';
+                clearEncryptFile(); 
             });
             document.getElementById('clearEncryptedMessageBtn').addEventListener('click', () => {
-                document.getElementById('encryptedMessage').value = '';
+                clearDecryptFile(); 
             });
             
             // Set up database
@@ -1038,12 +1108,21 @@
                 document.getElementById('encryptedOutput').value = '';
                 document.getElementById('encryptStatus').className = 'status';
                 document.getElementById('encryptStatus').textContent = '';
+                
+                // Also clear any loaded files
+                clearEncryptFile();
             });
             document.getElementById('clearDecryptBtn').addEventListener('click', () => {
                 document.getElementById('encryptedMessage').value = '';
                 document.getElementById('decryptedOutput').value = '';
                 document.getElementById('decryptStatus').className = 'status';
                 document.getElementById('decryptStatus').textContent = '';
+                
+                // Also clear any loaded files
+                clearDecryptFile();
+                
+                // Clear any decrypted binary data if present
+                window.decryptedBinaryData = null;
             });
             document.getElementById('importKeyBtn').addEventListener('click', importKey);
             document.getElementById('exportAllKeysBtn').addEventListener('click', exportAllKeys);
@@ -1724,14 +1803,15 @@
         // Encryption/Decryption Functions
         async function encryptMessage() {
             try {
-                const message = document.getElementById('encryptMessage').value;
-                const keyId = document.getElementById('encryptionKey').value;
-                const keyPassword = document.getElementById('encryptionPassword').value;
-                
-                if (!message) {
-                    showStatus('encryptStatus', 'Please enter a message to encrypt', 'error');
+                // Check for input
+                const messageText = document.getElementById('encryptMessage').value;
+                if (!messageText && !encryptFileData) {
+                    showStatus('encryptStatus', 'Please enter a message or add a file to encrypt', 'error');
                     return;
                 }
+                
+                const keyId = document.getElementById('encryptionKey').value;
+                const keyPassword = document.getElementById('encryptionPassword').value;
                 
                 if (!keyId) {
                     showStatus('encryptStatus', 'Please select an encryption key', 'error');
@@ -1744,6 +1824,7 @@
                 const keyData = keys.find(k => k.id === keyId);
                 if (!keyData) {
                     showStatus('encryptStatus', 'Key not found', 'error');
+                    setLoading(false);
                     return;
                 }
                 
@@ -1754,6 +1835,7 @@
                 if (keyData.protected) {
                     if (!keyPassword) {
                         showStatus('encryptStatus', 'Password required for this key', 'error');
+                        setLoading(false);
                         return;
                     }
                     
@@ -1761,20 +1843,68 @@
                     actualKeyData = safeMemory.retrieve(decryptedKeyRef);
                 }
                 
-                // Convert message to ArrayBuffer
-                const messageBuffer = new TextEncoder().encode(message);
+                let encryptedOutput;
+                let outputFileName = '';
                 
-                // Encrypt based on key type
-                let encryptionResult;
-                
-                if (keyData.type === 'aes') {
-                    encryptionResult = await encryptWithAES(messageBuffer, actualKeyData);
-                } else if (keyData.type === 'rsa' || keyData.type === 'rsa-4096') {
-                    encryptionResult = await encryptWithRSA(messageBuffer, actualKeyData);
-                } else if (keyData.type === 'ecc' || keyData.type === 'ecc-p384') {
-                    encryptionResult = await encryptWithECC(messageBuffer, actualKeyData);
+                // Handle file encryption differently from text encryption
+                if (encryptFileData instanceof File) {
+                    // Large file detected - use chunked processing
+                    if (encryptFileData.size > 1 * 1024 * 1024) { // 1MB threshold
+                        encryptedOutput = await encryptFileInChunks(encryptFileData, actualKeyData);
+                    } else {
+                        // Small file - process normally
+                        const reader = new FileReader();
+                        const fileBuffer = await new Promise((resolve, reject) => {
+                            reader.onload = e => resolve(e.target.result);
+                            reader.onerror = e => reject(e.target.error);
+                            reader.readAsArrayBuffer(encryptFileData);
+                        });
+                        
+                        // Choose encryption method based on key type
+                        let encryptionResult;
+                        if (keyData.type === 'aes') {
+                            encryptionResult = await encryptWithAES(fileBuffer, actualKeyData);
+                        } else if (keyData.type === 'rsa' || keyData.type === 'rsa-4096') {
+                            encryptionResult = await encryptWithRSA(fileBuffer, actualKeyData);
+                        } else if (keyData.type === 'ecc' || keyData.type === 'ecc-p384') {
+                            encryptionResult = await encryptWithECC(fileBuffer, actualKeyData);
+                        } else {
+                            throw new Error('Unsupported key type');
+                        }
+                        
+                        // Add file information
+                        encryptionResult.fileName = encryptFileName;
+                        encryptionResult.fileSize = encryptFileData.size;
+                        encryptionResult.isFile = true;
+                        
+                        // Encode the encryption info
+                        const encryptionInfoStr = JSON.stringify(encryptionResult);
+                        const encodedEncryptionInfo = btoa(encryptionInfoStr);
+                        encryptedOutput = `--LM--\n${encodedEncryptionInfo}\n--EM--`;
+                    }
+                    
+                    // Generate random filename with .lmn extension
+                    outputFileName = generateRandomFileName(6) + '.lmn';
                 } else {
-                    throw new Error('Unsupported key type');
+                    // Text encryption - process normally
+                    const messageBuffer = new TextEncoder().encode(messageText);
+                    
+                    // Choose encryption method based on key type
+                    let encryptionResult;
+                    if (keyData.type === 'aes') {
+                        encryptionResult = await encryptWithAES(messageBuffer, actualKeyData);
+                    } else if (keyData.type === 'rsa' || keyData.type === 'rsa-4096') {
+                        encryptionResult = await encryptWithRSA(messageBuffer, actualKeyData);
+                    } else if (keyData.type === 'ecc' || keyData.type === 'ecc-p384') {
+                        encryptionResult = await encryptWithECC(messageBuffer, actualKeyData);
+                    } else {
+                        throw new Error('Unsupported key type');
+                    }
+                    
+                    // Encode the encryption info
+                    const encryptionInfoStr = JSON.stringify(encryptionResult);
+                    const encodedEncryptionInfo = btoa(encryptionInfoStr);
+                    encryptedOutput = `--LM--\n${encodedEncryptionInfo}\n--EM--`;
                 }
                 
                 // Clean up sensitive data if we decrypted a protected key
@@ -1782,14 +1912,11 @@
                     safeMemory.delete(decryptedKeyRef);
                 }
                 
-                // Encode the encryption info as a JSON string and then as base64
-                const encryptionInfoStr = JSON.stringify(encryptionResult);
-                const encodedEncryptionInfo = btoa(encryptionInfoStr);
-                
-                // Add a header to indicate this is a Lemonade encrypted message
-                const encryptedOutput = `--LM--\n${encodedEncryptionInfo}\n--EM--`;
-                
                 document.getElementById('encryptedOutput').value = encryptedOutput;
+                
+                // Store the output file name for download
+                document.getElementById('downloadEncryptedBtn').setAttribute('data-filename', outputFileName || 'encrypted.lmn');
+                
                 showStatus('encryptStatus', 'Message encrypted successfully', 'success');
             } catch (error) {
                 console.error('Encryption error:', error);
@@ -1975,17 +2102,11 @@
         
         async function decryptMessage() {
             try {
+                // Get the encrypted message
                 const encryptedMessage = document.getElementById('encryptedMessage').value;
-                const keyId = document.getElementById('decryptionKey').value;
-                const keyPassword = document.getElementById('decryptionPassword').value;
                 
                 if (!encryptedMessage) {
-                    showStatus('decryptStatus', 'Please enter an encrypted message', 'error');
-                    return;
-                }
-                
-                if (!keyId) {
-                    showStatus('decryptStatus', 'Please select a decryption key', 'error');
+                    showStatus('decryptStatus', 'Please enter an encrypted message or add an encrypted file', 'error');
                     return;
                 }
                 
@@ -1994,8 +2115,6 @@
                     showStatus('decryptStatus', 'Invalid encrypted message format', 'error');
                     return;
                 }
-                
-                setLoading(true);
                 
                 // Parse the encrypted message
                 const messageMatch = encryptedMessage.match(/--LM--([\s\S]+?)--EM--/);
@@ -2014,9 +2133,20 @@
                     return;
                 }
                 
+                const keyId = document.getElementById('decryptionKey').value;
+                const keyPassword = document.getElementById('decryptionPassword').value;
+                
+                if (!keyId) {
+                    showStatus('decryptStatus', 'Please select a decryption key', 'error');
+                    return;
+                }
+                
+                setLoading(true);
+                
                 // Check if the message was encrypted with the selected key
                 if (encryptionInfo.keyId !== keyId) {
                     showStatus('decryptStatus', 'This message was not encrypted with the selected key', 'error');
+                    setLoading(false);
                     return;
                 }
                 
@@ -2024,6 +2154,7 @@
                 const keyData = keys.find(k => k.id === keyId);
                 if (!keyData) {
                     showStatus('decryptStatus', 'Key not found', 'error');
+                    setLoading(false);
                     return;
                 }
                 
@@ -2034,6 +2165,7 @@
                 if (keyData.protected) {
                     if (!keyPassword) {
                         showStatus('decryptStatus', 'Password required for this key', 'error');
+                        setLoading(false);
                         return;
                     }
                     
@@ -2041,17 +2173,23 @@
                     actualKeyData = safeMemory.retrieve(decryptedKeyRef);
                 }
                 
-                // Decrypt based on algorithm
-                let decryptedText;
+                // Decrypt based on whether it's a chunked file or not
+                let decryptedData;
                 
-                if (encryptionInfo.algorithm === AES_CONFIG.MODE) {
-                    decryptedText = await decryptWithAES(encryptionInfo, actualKeyData);
-                } else if (encryptionInfo.algorithm === RSA_CONFIG.ALGORITHM + '+' + AES_CONFIG.MODE) {
-                    decryptedText = await decryptWithRSA(encryptionInfo, actualKeyData);
-                } else if (encryptionInfo.algorithm === 'ECDH+' + AES_CONFIG.MODE) {
-                    decryptedText = await decryptWithECC(encryptionInfo, actualKeyData);
+                if (encryptionInfo.isChunked) {
+                    // Chunked file decryption
+                    decryptedData = await decryptChunkedFile(encryptionInfo, actualKeyData);
                 } else {
-                    throw new Error('Unsupported encryption algorithm: ' + encryptionInfo.algorithm);
+                    // Standard decryption
+                    if (encryptionInfo.algorithm === AES_CONFIG.MODE) {
+                        decryptedData = await decryptWithAES(encryptionInfo, actualKeyData);
+                    } else if (encryptionInfo.algorithm === RSA_CONFIG.ALGORITHM + '+' + AES_CONFIG.MODE) {
+                        decryptedData = await decryptWithRSA(encryptionInfo, actualKeyData);
+                    } else if (encryptionInfo.algorithm === 'ECDH+' + AES_CONFIG.MODE) {
+                        decryptedData = await decryptWithECC(encryptionInfo, actualKeyData);
+                    } else {
+                        throw new Error('Unsupported encryption algorithm: ' + encryptionInfo.algorithm);
+                    }
                 }
                 
                 // Clean up sensitive data if we decrypted a protected key
@@ -2059,7 +2197,23 @@
                     safeMemory.delete(decryptedKeyRef);
                 }
                 
-                document.getElementById('decryptedOutput').value = decryptedText;
+                // Check if it's a file or text
+                if (encryptionInfo.isFile && encryptionInfo.fileName) {
+                    // It's a file - store the decrypted data and file name
+                    document.getElementById('decryptedOutput').value = `File: ${encryptionInfo.fileName} (${formatFileSize(encryptionInfo.fileSize || decryptedData.byteLength)})`;
+                    document.getElementById('downloadDecryptedBtn').setAttribute('data-filename', encryptionInfo.fileName);
+                    document.getElementById('downloadDecryptedBtn').setAttribute('data-binary', 'true');
+                    // Store the binary data for download
+                    window.decryptedBinaryData = decryptedData;
+                } else {
+                    // It's text
+                    const decryptedText = new TextDecoder().decode(decryptedData);
+                    document.getElementById('decryptedOutput').value = decryptedText;
+                    document.getElementById('downloadDecryptedBtn').setAttribute('data-filename', 'decrypted.txt');
+                    document.getElementById('downloadDecryptedBtn').setAttribute('data-binary', 'false');
+                    window.decryptedBinaryData = null;
+                }
+                
                 showStatus('decryptStatus', 'Message decrypted successfully', 'success');
             } catch (error) {
                 console.error('Decryption error:', error);
@@ -2096,8 +2250,8 @@
                 encryptedData
             );
             
-            // Convert the decrypted data to text
-            return new TextDecoder().decode(decryptedData);
+            // Return raw buffer instead of text
+            return decryptedData;
         }
         
         async function decryptWithRSA(encryptionInfo, keyData) {
@@ -2141,10 +2295,10 @@
                 encryptedData
             );
             
-            // Convert the decrypted data to text
-            return new TextDecoder().decode(decryptedData);
+            // Return raw buffer instead of text
+            return decryptedData;
         }
-        
+
         async function decryptWithECC(encryptionInfo, keyData) {
             // Get the encrypted data, ephemeral public key, and IV
             const encryptedData = base64ToArrayBuffer(encryptionInfo.data);
@@ -2195,8 +2349,56 @@
                 encryptedData
             );
             
-            // Convert the decrypted data to text
-            return new TextDecoder().decode(decryptedData);
+            // Return raw buffer instead of text
+            return decryptedData;
+        }
+
+        // File download functions
+        function downloadEncryptedFile() {
+            const encryptedOutput = document.getElementById('encryptedOutput').value;
+            if (!encryptedOutput) {
+                showStatus('encryptStatus', 'No encrypted data to download', 'error');
+                return;
+            }
+            
+            const filename = document.getElementById('downloadEncryptedBtn').getAttribute('data-filename') || generateRandomFileName(6) + '.lmn';
+            const blob = new Blob([encryptedOutput], { type: 'text/plain' });
+            downloadBlob(blob, filename);
+            
+            showStatus('encryptStatus', `File "${filename}" downloaded successfully`, 'success');
+        }
+
+        function downloadDecryptedFile() {
+            if (window.decryptedBinaryData) {
+                // Binary file
+                const filename = document.getElementById('downloadDecryptedBtn').getAttribute('data-filename') || 'decrypted_file';
+                const blob = new Blob([window.decryptedBinaryData]);
+                downloadBlob(blob, filename);
+            } else {
+                // Text file
+                const decryptedOutput = document.getElementById('decryptedOutput').value;
+                if (!decryptedOutput) {
+                    showStatus('decryptStatus', 'No decrypted data to download', 'error');
+                    return;
+                }
+                
+                const filename = document.getElementById('downloadDecryptedBtn').getAttribute('data-filename') || 'decrypted.txt';
+                const blob = new Blob([decryptedOutput], { type: 'text/plain' });
+                downloadBlob(blob, filename);
+            }
+            
+            showStatus('decryptStatus', 'File downloaded successfully', 'success');
+        }
+
+        function downloadBlob(blob, filename) {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
         }
         
         // Key Import/Export Functions
@@ -2729,6 +2931,723 @@
             console.log('App is already running in standalone mode (installed)');
             if (installStatus) {
                 showStatus('installStatus', 'Lemonade is running as an installed app', 'success');
+            }
+        }
+
+        // File handling variables
+        let encryptFileData = null;
+        let encryptFileName = '';
+        let decryptFileData = null;
+        let decryptFileName = '';
+
+        // Setup file drop areas
+        document.addEventListener('DOMContentLoaded', function() {
+            // Setup file input elements
+            const encryptFileInput = document.getElementById('encryptFileInput');
+            const encryptBrowseBtn = document.getElementById('encryptBrowseBtn');
+            const encryptFileInfo = document.getElementById('encryptFileInfo');
+            const encryptFileNameEl = document.getElementById('encryptFileName');
+            const removeEncryptFile = document.getElementById('removeEncryptFile');
+                
+            // Setup decrypt file elements
+            const decryptFileInput = document.getElementById('decryptFileInput');
+            const decryptBrowseBtn = document.getElementById('decryptBrowseBtn');
+            const decryptFileInfo = document.getElementById('decryptFileInfo');
+            const decryptFileNameEl = document.getElementById('decryptFileName');
+            const removeDecryptFile = document.getElementById('removeDecryptFile');
+            
+            // Download buttons
+            const downloadEncryptedBtn = document.getElementById('downloadEncryptedBtn');
+            const downloadDecryptedBtn = document.getElementById('downloadDecryptedBtn');
+            
+            // Encrypt file area event listeners            
+            encryptBrowseBtn.addEventListener('click', () => {
+                encryptFileInput.click();
+            });
+            
+            encryptFileInput.addEventListener('change', (e) => {
+                handleEncryptFileSelect(e.target.files);
+            });
+            
+            removeEncryptFile.addEventListener('click', () => {
+                clearEncryptFile();
+            });
+            
+            // Decrypt file area event listeners            
+            decryptBrowseBtn.addEventListener('click', () => {
+                decryptFileInput.click();
+            });
+            
+            decryptFileInput.addEventListener('change', (e) => {
+                handleDecryptFileSelect(e.target.files);
+            });
+            
+            removeDecryptFile.addEventListener('click', () => {
+                clearDecryptFile();
+            });
+            
+            // Download file event listeners
+            downloadEncryptedBtn.addEventListener('click', downloadEncryptedFile);
+            downloadDecryptedBtn.addEventListener('click', downloadDecryptedFile);
+
+            document.getElementById('encryptBtn').addEventListener('click', function() {
+            // Clear any previous decrypted binary data
+            window.decryptedBinaryData = null;
+        });
+        });
+
+        // File handling functions
+        function handleEncryptFileSelect(files) {
+            if (files.length === 0) return;
+            
+            const file = files[0];
+            encryptFileName = file.name;
+            
+            // Store the file object instead of reading it immediately
+            encryptFileData = file;
+            document.getElementById('encryptMessage').value = `File: ${encryptFileName} (${formatFileSize(file.size)})`;
+            document.getElementById('encryptFileInfo').style.display = 'flex';
+            document.getElementById('encryptFileName').textContent = encryptFileName;
+            
+            // Display size warning for large files
+            if (file.size > 20 * 1024 * 1024) {  // 20MB
+                showStatus('encryptStatus', 'Large file detected. Processing may take some time.', 'warning');
+            }
+}
+
+        function handleDecryptFileSelect(files) {
+            if (files.length === 0) return;
+            
+            const file = files[0];
+            decryptFileName = file.name;
+            
+            // Always try to read as text first for encrypted files
+            const textReader = new FileReader();
+            textReader.onload = function(textEvent) {
+                const textContent = textEvent.target.result;
+                
+                // Check if it's a valid Lemonade encrypted format
+                if (textContent.includes('--LM--') && textContent.includes('--EM--')) {
+                    // It's a valid Lemonade encrypted message
+                    document.getElementById('encryptedMessage').value = textContent;
+                    document.getElementById('decryptFileInfo').style.display = 'flex';
+                    document.getElementById('decryptFileName').textContent = decryptFileName;
+                    
+                    // Check for chunked format
+                    if (textContent.includes('"isChunked":true')) {
+                        showStatus('decryptStatus', 'Large encrypted file detected. Ready for decryption.', 'success');
+                    } else {
+                        showStatus('decryptStatus', 'Encrypted file loaded successfully.', 'success');
+                    }
+                } else {
+                    // Not a valid Lemonade format
+                    showStatus('decryptStatus', 'This file is not in Lemonade encrypted format. Files must have the Lemonade header/footer markers.', 'error');
+                    document.getElementById('decryptFileInfo').style.display = 'none';
+                }
+            };
+            
+            textReader.onerror = function() {
+                // Error reading as text
+                showStatus('decryptStatus', 'Unable to read the file as a Lemonade encrypted format.', 'error');
+            };
+            
+            // Read the file as text, regardless of its type
+            textReader.readAsText(file);
+        }
+
+        function clearEncryptFile() {
+            encryptFileData = null;
+            encryptFileName = '';
+            document.getElementById('encryptMessage').value = '';
+            document.getElementById('encryptFileInfo').style.display = 'none';
+            document.getElementById('encryptFileInput').value = '';
+        }
+
+        function clearDecryptFile() {
+            decryptFileData = null;
+            decryptFileName = '';
+            document.getElementById('encryptedMessage').value = '';
+            document.getElementById('decryptFileInfo').style.display = 'none';
+            document.getElementById('decryptFileInput').value = '';
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        function generateRandomFileName(length = 6) {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+            let result = '';
+            for (let i = 0; i < length; i++) {
+                result += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return result;
+        }
+
+        // Web worker for crypto operations
+        function createCryptoWorker() {
+            // Worker code as a string
+            const workerCode = `
+            // Constants for crypto operations
+            const AES_CONFIG = {
+                MODE: "AES-GCM",
+                IV_LENGTH: 12,
+                TAG_LENGTH: 128
+            };
+
+            // Helper functions for array buffer conversions
+            function arrayBufferToBase64(buffer) {
+                const bytes = new Uint8Array(buffer);
+                let binary = '';
+                for (let i = 0; i < bytes.byteLength; i++) {
+                    binary += String.fromCharCode(bytes[i]);
+                }
+                return btoa(binary);
+            }
+
+            function base64ToArrayBuffer(base64) {
+                const binaryString = atob(base64);
+                const bytes = new Uint8Array(binaryString.length);
+                for (let i = 0; i < binaryString.length; i++) {
+                    bytes[i] = binaryString.charCodeAt(i);
+                }
+                return bytes.buffer;
+            }
+
+            // Handle messages from the main thread
+            self.onmessage = async function(e) {
+                const { operation, data } = e.data;
+                
+                try {
+                    let result;
+                    
+                    switch (operation) {
+                        case 'encryptChunk':
+                            result = await encryptChunk(data);
+                            break;
+                        case 'decryptChunk':
+                            result = await decryptChunk(data);
+                            break;
+                        default:
+                            throw new Error('Unknown operation: ' + operation);
+                    }
+                    
+                    self.postMessage({
+                        status: 'success',
+                        result: result,
+                        chunkIndex: data.chunkIndex,
+                        totalChunks: data.totalChunks
+                    });
+                } catch (error) {
+                    self.postMessage({
+                        status: 'error',
+                        error: error.message,
+                        chunkIndex: data.chunkIndex
+                    });
+                }
+            };
+
+            // Encrypt a single chunk
+            async function encryptChunk(data) {
+                const { chunk, key, iv, chunkIndex, algorithm } = data;
+                
+                // Import the key
+                let cryptoKey;
+                
+                if (algorithm === 'AES-GCM') {
+                    // For AES, directly import the key
+                    cryptoKey = await self.crypto.subtle.importKey(
+                        'raw',
+                        base64ToArrayBuffer(key),
+                        { name: 'AES-GCM' },
+                        false,
+                        ['encrypt']
+                    );
+                    
+                    // Calculate nonce (IV) for this chunk by XORing the base IV with the chunk index
+                    // This ensures unique IV for each chunk while still being deterministic
+                    const baseIv = new Uint8Array(base64ToArrayBuffer(iv));
+                    const chunkIv = new Uint8Array(baseIv);
+                    
+                    // XOR the last 4 bytes with the chunk index to make a unique IV per chunk
+                    const indexBytes = new Uint8Array(new Uint32Array([chunkIndex]).buffer);
+                    for (let i = 0; i < 4 && i < chunkIv.length; i++) {
+                        chunkIv[chunkIv.length - 1 - i] ^= indexBytes[i];
+                    }
+                    
+                    // Encrypt the chunk
+                    const encryptedData = await self.crypto.subtle.encrypt(
+                        {
+                            name: 'AES-GCM',
+                            iv: chunkIv,
+                            tagLength: AES_CONFIG.TAG_LENGTH
+                        },
+                        cryptoKey,
+                        chunk
+                    );
+                    
+                    return {
+                        data: arrayBufferToBase64(encryptedData),
+                        chunkIv: arrayBufferToBase64(chunkIv)
+                    };
+                }
+                // Add similar code for RSA and ECC if needed for chunked encryption
+                
+                throw new Error('Unsupported algorithm for chunked encryption: ' + algorithm);
+            }
+
+            // Decrypt a single chunk
+            async function decryptChunk(data) {
+                const { chunk, key, iv, chunkIndex, algorithm } = data;
+                
+                // Import the key
+                let cryptoKey;
+                
+                if (algorithm === 'AES-GCM') {
+                    // For AES, directly import the key
+                    cryptoKey = await self.crypto.subtle.importKey(
+                        'raw',
+                        base64ToArrayBuffer(key),
+                        { name: 'AES-GCM' },
+                        false,
+                        ['decrypt']
+                    );
+                    
+                    // Use the provided IV for this specific chunk
+                    const chunkIv = base64ToArrayBuffer(iv);
+                    
+                    // Decrypt the chunk
+                    const decryptedData = await self.crypto.subtle.decrypt(
+                        {
+                            name: 'AES-GCM',
+                            iv: chunkIv,
+                            tagLength: AES_CONFIG.TAG_LENGTH
+                        },
+                        cryptoKey,
+                        base64ToArrayBuffer(chunk)
+                    );
+                    
+                    return {
+                        data: decryptedData
+                    };
+                }
+                // Add similar code for RSA and ECC if needed for chunked decryption
+                
+                throw new Error('Unsupported algorithm for chunked decryption: ' + algorithm);
+            }
+            `;
+            
+            // Create a blob from the worker code
+            const blob = new Blob([workerCode], { type: 'application/javascript' });
+            const workerUrl = URL.createObjectURL(blob);
+            
+            // Create and return the worker
+            return new Worker(workerUrl);
+        }
+
+        // Initialize the worker when the page loads
+        let cryptoWorker;
+        let isWorkerBusy = false;
+        const pendingTasks = [];
+
+        function initCryptoWorker() {
+            if (!cryptoWorker) {
+                try {
+                    cryptoWorker = createCryptoWorker();
+                    
+                    // Set up message handler
+                    cryptoWorker.onmessage = function(e) {
+                        const { status, result, error, chunkIndex, totalChunks } = e.data;
+                        
+                        // Find the corresponding task
+                        const taskIndex = pendingTasks.findIndex(task => 
+                            task.chunkIndex === chunkIndex && task.totalChunks === totalChunks);
+                        
+                        if (taskIndex !== -1) {
+                            const task = pendingTasks[taskIndex];
+                            
+                            if (status === 'success') {
+                                task.resolve(result);
+                            } else {
+                                task.reject(new Error(error));
+                            }
+                            
+                            // Remove the completed task
+                            pendingTasks.splice(taskIndex, 1);
+                        }
+                        
+                        // Process next task if any
+                        processNextTask();
+                    };
+                    
+                    cryptoWorker.onerror = function(error) {
+                        console.error('Web Worker error:', error);
+                        
+                        // Reject all pending tasks on worker error
+                        pendingTasks.forEach(task => {
+                            task.reject(new Error('Web Worker error: ' + error.message));
+                        });
+                        
+                        // Clear pending tasks
+                        pendingTasks.length = 0;
+                        isWorkerBusy = false;
+                        
+                        // Recreate the worker
+                        terminateCryptoWorker();
+                        initCryptoWorker();
+                    };
+                } catch (error) {
+                    console.error('Failed to create Web Worker:', error);
+                    // Fall back to main thread processing if worker creation fails
+                }
+            }
+        }
+
+        function terminateCryptoWorker() {
+            if (cryptoWorker) {
+                cryptoWorker.terminate();
+                cryptoWorker = null;
+                isWorkerBusy = false;
+            }
+        }
+
+        function processNextTask() {
+            if (pendingTasks.length > 0 && !isWorkerBusy) {
+                isWorkerBusy = true;
+                const nextTask = pendingTasks[0];
+                
+                try {
+                    cryptoWorker.postMessage(nextTask.data);
+                } catch (error) {
+                    // Handle case where postMessage might fail (e.g., with large data)
+                    nextTask.reject(error);
+                    pendingTasks.shift();
+                    isWorkerBusy = false;
+                    processNextTask();
+                }
+            } else {
+                isWorkerBusy = false;
+            }
+        }
+
+        // Send a task to the worker with a promise-based interface
+        function sendToWorker(data) {
+            return new Promise((resolve, reject) => {
+                if (!cryptoWorker) {
+                    return reject(new Error('Web Worker not available'));
+                }
+                
+                // Create a task object
+                const task = {
+                    data: data,
+                    resolve: resolve,
+                    reject: reject,
+                    chunkIndex: data.data.chunkIndex,
+                    totalChunks: data.data.totalChunks
+                };
+                
+                // Add to pending tasks
+                pendingTasks.push(task);
+                
+                // Process immediately if worker is not busy
+                if (!isWorkerBusy) {
+                    processNextTask();
+                }
+            });
+        }
+
+        // Initialize the worker when the page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize only if Web Workers are supported
+            if (window.Worker) {
+                initCryptoWorker();
+            }
+        });
+
+        // Cleanup when the page unloads
+        window.addEventListener('beforeunload', function() {
+            terminateCryptoWorker();
+        });
+
+        // Constants for chunked file processing
+        const FILE_CHUNK_SIZE = 5 * 1024 * 1024; // 5MB chunks
+
+        // Functions to update progress bars
+        function showProgress(isEncrypt, percent) {
+            const container = document.getElementById(isEncrypt ? 'encryptProgressContainer' : 'decryptProgressContainer');
+            const bar = document.getElementById(isEncrypt ? 'encryptProgressBar' : 'decryptProgressBar');
+            const text = document.getElementById(isEncrypt ? 'encryptProgressText' : 'decryptProgressText');
+            
+            container.style.display = 'block';
+            bar.style.width = `${percent}%`;
+            text.textContent = `${Math.round(percent)}%`;
+        }
+
+        function hideProgress(isEncrypt) {
+            const container = document.getElementById(isEncrypt ? 'encryptProgressContainer' : 'decryptProgressContainer');
+            container.style.display = 'none';
+        }
+
+        // Read a file in chunks
+        async function readFileInChunks(file, onChunkRead, onProgress) {
+            const fileSize = file.size;
+            const numChunks = Math.ceil(fileSize / FILE_CHUNK_SIZE);
+            const chunks = [];
+            
+            for (let i = 0; i < numChunks; i++) {
+                const start = i * FILE_CHUNK_SIZE;
+                const end = Math.min(fileSize, start + FILE_CHUNK_SIZE);
+                
+                const chunk = await readFileChunk(file, start, end);
+                chunks.push(chunk);
+                
+                // Call the callback with the chunk data
+                if (onChunkRead) {
+                    await onChunkRead(chunk, i, numChunks);
+                }
+                
+                // Update progress
+                if (onProgress) {
+                    const percent = ((i + 1) / numChunks) * 100;
+                    onProgress(percent);
+                }
+            }
+            
+            return chunks;
+        }
+
+        // Read a single chunk from a file
+        function readFileChunk(file, start, end) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    resolve(e.target.result);
+                };
+                
+                reader.onerror = function(e) {
+                    reject(e.target.error);
+                };
+                
+                const slice = file.slice(start, end);
+                reader.readAsArrayBuffer(slice);
+            });
+        }
+
+        // Encrypt a file in chunks
+        async function encryptFileInChunks(file, keyData) {
+            try {
+                showProgress(true, 0);
+                
+                const fileSize = file.size;
+                const fileName = file.name;
+                const numChunks = Math.ceil(fileSize / FILE_CHUNK_SIZE);
+                const encryptedChunks = [];
+                const chunkIVs = [];
+                
+                // Generate a base IV for the file
+                const baseIV = window.crypto.getRandomValues(new Uint8Array(AES_CONFIG.IV_LENGTH));
+                const baseIVBase64 = arrayBufferToBase64(baseIV);
+                
+                // Only AES encryption is supported for chunked files
+                if (keyData.type !== 'aes') {
+                    throw new Error('Only AES encryption is supported for large files. Please select an AES key.');
+                }
+                
+                // Extract the raw AES key
+                let rawKey;
+                if (keyData._cryptoKey) {
+                    // If we already have a CryptoKey object, export it
+                    rawKey = await window.crypto.subtle.exportKey('raw', keyData._cryptoKey);
+                    rawKey = arrayBufferToBase64(rawKey);
+                } else {
+                    // Otherwise use the stored key
+                    rawKey = keyData.key;
+                }
+                
+                // Process each chunk
+                await readFileInChunks(
+                    file,
+                    async (chunkData, chunkIndex, totalChunks) => {
+                        try {
+                            let encryptedChunk;
+                            
+                            // Try to use Web Worker for encryption if available
+                            if (cryptoWorker) {
+                                const result = await sendToWorker({
+                                    operation: 'encryptChunk',
+                                    data: {
+                                        chunk: chunkData,
+                                        key: rawKey,
+                                        iv: baseIVBase64,
+                                        chunkIndex: chunkIndex,
+                                        totalChunks: totalChunks,
+                                        algorithm: 'AES-GCM'
+                                    }
+                                });
+                                
+                                encryptedChunk = result.data;
+                                chunkIVs.push(result.chunkIv);
+                            } else {
+                                // Fallback to main thread encryption
+                                const cryptoKey = await importAESKey(base64ToArrayBuffer(rawKey));
+                                
+                                // Calculate a unique IV for this chunk
+                                const chunkIV = new Uint8Array(baseIV);
+                                const indexBytes = new Uint8Array(new Uint32Array([chunkIndex]).buffer);
+                                for (let i = 0; i < 4 && i < chunkIV.length; i++) {
+                                    chunkIV[chunkIV.length - 1 - i] ^= indexBytes[i];
+                                }
+                                
+                                // Encrypt the chunk
+                                const encryptedData = await window.crypto.subtle.encrypt(
+                                    {
+                                        name: AES_CONFIG.MODE,
+                                        iv: chunkIV,
+                                        tagLength: AES_CONFIG.TAG_LENGTH
+                                    },
+                                    cryptoKey,
+                                    chunkData
+                                );
+                                
+                                encryptedChunk = arrayBufferToBase64(encryptedData);
+                                chunkIVs.push(arrayBufferToBase64(chunkIV));
+                            }
+                            
+                            encryptedChunks.push(encryptedChunk);
+                        } catch (error) {
+                            console.error(`Error encrypting chunk ${chunkIndex}:`, error);
+                            throw error;
+                        }
+                    },
+                    (percent) => {
+                        showProgress(true, percent);
+                    }
+                );
+                
+                // Create encryption info object
+                const encryptionResult = {
+                    algorithm: AES_CONFIG.MODE,
+                    keyId: keyData.id,
+                    baseIV: baseIVBase64,
+                    chunkIVs: chunkIVs,
+                    chunks: encryptedChunks,
+                    chunkSize: FILE_CHUNK_SIZE,
+                    originalSize: fileSize,
+                    fileName: fileName,
+                    isFile: true,
+                    isChunked: true,
+                    timestamp: new Date().toISOString()
+                };
+                
+                // Encode the encryption info as a JSON string and then as base64
+                const encryptionInfoStr = JSON.stringify(encryptionResult);
+                const encodedEncryptionInfo = btoa(encryptionInfoStr);
+                
+                // Add a header to indicate this is a Lemonade encrypted message
+                const encryptedOutput = `--LM--\n${encodedEncryptionInfo}\n--EM--`;
+                
+                hideProgress(true);
+                return encryptedOutput;
+            } catch (error) {
+                hideProgress(true);
+                throw error;
+            }
+        }
+
+        // Decrypt a chunked file
+        async function decryptChunkedFile(encryptionInfo, keyData) {
+            try {
+                showProgress(false, 0);
+                
+                // Validate chunked format
+                if (!encryptionInfo.isChunked || !encryptionInfo.chunks || !encryptionInfo.chunkIVs) {
+                    throw new Error('Invalid chunked file format');
+                }
+                
+                // Extract key data
+                let rawKey;
+                if (keyData._cryptoKey) {
+                    // If we already have a CryptoKey object, export it
+                    rawKey = await window.crypto.subtle.exportKey('raw', keyData._cryptoKey);
+                    rawKey = arrayBufferToBase64(rawKey);
+                } else {
+                    // Otherwise use the stored key
+                    rawKey = keyData.key;
+                }
+                
+                const chunks = encryptionInfo.chunks;
+                const chunkIVs = encryptionInfo.chunkIVs;
+                const totalChunks = chunks.length;
+                const decryptedChunks = [];
+                
+                // Process each chunk
+                for (let i = 0; i < totalChunks; i++) {
+                    try {
+                        let decryptedChunk;
+                        
+                        // Try to use Web Worker for decryption if available
+                        if (cryptoWorker) {
+                            const result = await sendToWorker({
+                                operation: 'decryptChunk',
+                                data: {
+                                    chunk: chunks[i],
+                                    key: rawKey,
+                                    iv: chunkIVs[i],
+                                    chunkIndex: i,
+                                    totalChunks: totalChunks,
+                                    algorithm: 'AES-GCM'
+                                }
+                            });
+                            
+                            decryptedChunk = result.data;
+                        } else {
+                            // Fallback to main thread decryption
+                            const cryptoKey = await importAESKey(base64ToArrayBuffer(rawKey));
+                            const chunkIV = base64ToArrayBuffer(chunkIVs[i]);
+                            
+                            // Decrypt the chunk
+                            decryptedChunk = await window.crypto.subtle.decrypt(
+                                {
+                                    name: AES_CONFIG.MODE,
+                                    iv: chunkIV,
+                                    tagLength: AES_CONFIG.TAG_LENGTH
+                                },
+                                cryptoKey,
+                                base64ToArrayBuffer(chunks[i])
+                            );
+                        }
+                        
+                        decryptedChunks.push(decryptedChunk);
+                        
+                        // Update progress
+                        const percent = ((i + 1) / totalChunks) * 100;
+                        showProgress(false, percent);
+                    } catch (error) {
+                        console.error(`Error decrypting chunk ${i}:`, error);
+                        throw error;
+                    }
+                }
+                
+                // Combine the chunks into a single buffer
+                const totalLength = decryptedChunks.reduce((sum, chunk) => sum + chunk.byteLength, 0);
+                const combinedBuffer = new Uint8Array(totalLength);
+                
+                let offset = 0;
+                for (const chunk of decryptedChunks) {
+                    combinedBuffer.set(new Uint8Array(chunk), offset);
+                    offset += chunk.byteLength;
+                }
+                
+                hideProgress(false);
+                return combinedBuffer.buffer;
+            } catch (error) {
+                hideProgress(false);
+                throw error;
             }
         }
 
