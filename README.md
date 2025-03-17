@@ -52,15 +52,132 @@ To create a new encryption key:
 
 ### Key Types
 
-Lemonade supports several encryption algorithms, each with different characteristics and security properties:
+Lemonade supports several encryption methods, each with specific implementation details and use cases. All keys are stored and shared in Lemonade's .lim file format.
 
-| Key Type | How It's Used in Lemonade | Security Level | Breaking Difficulty | Best Used For |
-|----------|---------------------------|---------------|---------------------|--------------|
-| AES-GCM (Symmetric) - 256 bits | Direct encryption of messages/files with a 12-byte IV and 128-bit authentication tag. Used alone or as part of hybrid encryption in RSA and ECC modes. | High | Extremely difficult: 2^256 possible keys, believed to be quantum-resistant. No known practical attacks against properly implemented AES-256. | Fast encryption of large files and messages when both parties can securely share the key. Provides excellent performance even on mobile devices. |
-| RSA-OAEP (Asymmetric) - 2048 bits | Used in hybrid mode: generates a random AES key for the actual data encryption, then encrypts this AES key with RSA. Uses SHA-256 for the hash function. | Medium | Difficult with current technology: requires approximately 2^112 operations to break with classical computers. Vulnerable to quantum computers using Shor's algorithm. | Secure messaging where only the recipient's public key is needed for encryption. Allows secure communication without prior exchange of secret keys - the sender only needs the recipient's public key (contained in their .lim file) to encrypt messages that only the recipient can decrypt. |
-| RSA-OAEP (Asymmetric) - 4096 bits | Same hybrid approach as 2048-bit RSA, but with larger key size. More resource-intensive during encryption/decryption. | High | Very difficult: requires approximately 2^128 operations with classical computers. Still vulnerable to quantum computing but would require more qubits than 2048-bit. | High-security communications where stronger protection is worth the performance tradeoff. Recommended for particularly sensitive information. |
-| ECC (Asymmetric) - P-256 | Creates ephemeral key pairs for forward secrecy. Uses ECDH for shared secret derivation, then derives an AES key to encrypt the actual message. | Medium | Difficult: Security comparable to RSA-3072 (~2^128 operations), but with much shorter key lengths. Vulnerable to quantum attacks. | Efficient secure communications on devices with limited computing power. Offers good security with less computational overhead than equivalent-strength RSA. |
-| ECC (Asymmetric) - P-384 | Same approach as P-256 but with larger curve parameters for higher security margin. | High | Very difficult: Equivalent to approximately RSA-7680 (~2^192 operations). Still vulnerable to quantum computing but requires more qubits than P-256. | High-security communications with better performance than RSA-4096. Good balance of strong security and reasonable performance. |
+#### AES-GCM (Symmetric) - 256 bits
+
+**Implementation in Lemonade:**
+- The .lim file contains a single 256-bit encryption key
+- When password-protected, the key itself is encrypted using a key derived from your password
+- Uses a 12-byte random Initialization Vector (IV) for each encryption operation
+- Includes a 128-bit authentication tag to verify message integrity
+
+**Usage Process:**
+1. Both sender and recipient must have identical copies of the same .lim file
+2. The sender encrypts using this shared key
+3. The recipient decrypts using the same key
+4. If password-protected, both parties need the password to use the key
+
+**Security Profile:**
+- Extremely strong encryption (2^256 possible keys)
+- Currently considered quantum-resistant
+- Security relies entirely on keeping the .lim file secure
+- If someone obtains the .lim file, they can decrypt all messages (unless password-protected)
+
+**Best Used For:**
+- Personal encryption where you're both sender and recipient
+- Secure communication between trusted parties who can safely exchange the .lim file
+- Encrypting large files efficiently (fastest performance of all key types)
+
+#### RSA-OAEP (Asymmetric) - 2048 bits
+
+**Implementation in Lemonade:**
+- The .lim file contains both public and private key components
+- Lemonade uses a hybrid approach:
+  1. Generates a random one-time AES-256 key for each message
+  2. Encrypts the actual data with this AES key
+  3. Encrypts the AES key with the recipient's RSA public key
+  4. Includes both the RSA-encrypted AES key and the AES-encrypted message
+
+**Usage Process:**
+1. The recipient generates an RSA key pair and exports their .lim file
+2. The recipient shares their .lim file with potential senders
+3. The sender imports the recipient's .lim file into their Lemonade app
+4. The sender encrypts using the recipient's public key (from the .lim file)
+5. Only the recipient with the private key can decrypt the message
+
+**Security Profile:**
+- 2048-bit key length (equivalent to approximately 112 bits of symmetric security)
+- Vulnerable to quantum computing attacks (Shor's algorithm)
+- Sharing the .lim file doesn't compromise decryption security
+- Even if the sender's computer is compromised after sending, past messages remain secure
+
+**Best Used For:**
+- One-way secure messaging where public keys can be exchanged over insecure channels
+- Scenarios where the key exchange needs to happen only once for ongoing secure communication
+- Communications where the recipient wants to verify the message hasn't been tampered with
+
+#### RSA-OAEP (Asymmetric) - 4096 bits
+
+**Implementation in Lemonade:**
+- Identical hybrid approach to 2048-bit RSA, but with larger key size
+- Uses more computational resources for both encryption and decryption
+- The .lim file is larger due to the increased key size
+
+**Usage Process:**
+- Same process as RSA-2048, but with higher security margin
+- Noticeably slower encryption/decryption operations
+
+**Security Profile:**
+- 4096-bit key length (equivalent to approximately 128 bits of symmetric security)
+- Still vulnerable to quantum computing, but requires more qubits to break
+- Significantly more resistant to factoring attacks using classical computers
+
+**Best Used For:**
+- High-security communications where the strongest non-quantum protection is desired
+- Cases where the performance impact of larger keys is acceptable
+- Long-term storage of sensitive information that may need to remain secure for many years
+
+#### ECC (Asymmetric) - P-256
+
+**Implementation in Lemonade:**
+- The .lim file contains both public and private key components based on the P-256 curve
+- Uses a sophisticated hybrid approach:
+  1. Creates an ephemeral ECC key pair for each encryption operation
+  2. Uses ECDH (Elliptic Curve Diffie-Hellman) to derive a shared secret
+  3. Derives an AES key from this shared secret
+  4. Encrypts the actual message with the derived AES key
+  5. Includes the ephemeral public key with the message for decryption
+
+**Usage Process:**
+1. The recipient generates an ECC key pair and exports their .lim file
+2. The recipient shares their .lim file with potential senders
+3. The sender imports the recipient's .lim file
+4. The sender encrypts using the recipient's public key
+5. Only the recipient with the corresponding private key can decrypt
+
+**Security Profile:**
+- P-256 curve provides security equivalent to approximately 128 bits of symmetric security
+- Much smaller key size than equivalent-strength RSA (256 bits vs 3072 bits)
+- Provides forward secrecy through ephemeral key generation
+- Vulnerable to quantum computing attacks
+
+**Best Used For:**
+- Secure messaging on mobile or resource-constrained devices
+- Applications where efficiency is important but strong security is still required
+- Systems where key and message size need to be minimized
+
+#### ECC (Asymmetric) - P-384
+
+**Implementation in Lemonade:**
+- Same implementation approach as P-256, but using the larger P-384 curve
+- The .lim file contains the larger curve parameters and key components
+- Uses the same ephemeral key ECDH approach for each message
+
+**Usage Process:**
+- Identical to P-256 but with higher security margin
+- Slightly slower than P-256 but still much faster than RSA-4096
+
+**Security Profile:**
+- P-384 curve provides security equivalent to approximately 192 bits of symmetric security
+- Stronger than RSA-4096 with much smaller key sizes
+- Still vulnerable to quantum computing attacks
+- Excellent forward secrecy properties
+
+**Best Used For:**
+- High-security applications where ECC is preferred
+- Perfect balance of strong security, reasonable performance, and small key size
+- Users who need the strongest currently available ECC option in Lemonade
 
 ### Password Protection
 
