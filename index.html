@@ -487,6 +487,65 @@
         body.dark-mode .security-badge.low {
             box-shadow: 0 0 5px var(--security-low);
         }
+
+        .key-pair-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+
+        .key-pair-badge.full {
+            background-color: rgba(0, 204, 102, 0.1);
+            color: var(--security-high);
+            border: 1px solid var(--security-high);
+        }
+
+        .key-pair-badge.private {
+            background-color: rgba(204, 51, 0, 0.1);
+            color: var(--security-low);
+            border: 1px solid var(--security-low);
+        }
+
+        .key-pair-badge.public {
+            background-color: rgba(240, 173, 78, 0.1);
+            color: var(--security-medium);
+            border: 1px solid var(--security-medium);
+        }
+
+        .private-key-btn {
+            border: 1px solid var(--error-color) !important;
+            color: var(--error-color) !important;
+        }
+
+        .private-key-btn:hover {
+            background-color: rgba(204, 51, 0, 0.1) !important;
+        }
+
+        /* Enhanced colors for dark mode key pair badges */
+        body.dark-mode .key-pair-badge.full {
+            box-shadow: 0 0 5px var(--security-high);
+        }
+
+        body.dark-mode .key-pair-badge.private {
+            box-shadow: 0 0 5px var(--security-low);
+        }
+
+        body.dark-mode .key-pair-badge.public {
+            box-shadow: 0 0 5px var(--security-medium);
+        }
+
+        body.dark-mode .private-key-btn {
+            border: 1px solid var(--error-color) !important;
+            color: var(--error-color) !important;
+        }
+
+        body.dark-mode .private-key-btn:hover {
+            background-color: rgba(255, 49, 49, 0.2) !important;
+        }
         
         .config-toggle {
             display: flex;
@@ -831,7 +890,8 @@
                 
                 <div class="btn-group">
                     <button id="importKeyBtn" class="btn-secondary">Import Key</button>
-                    <button id="exportAllKeysBtn" class="btn-secondary">Export All Keys</button>
+                    <button id="exportAllKeysBtn" class="btn-secondary">Export State</button>
+                    <button id="importStateBtn" class="btn-secondary">Import State</button>
                 </div>
 
                 <div style="text-align: center;">
@@ -1179,6 +1239,7 @@
             });
             document.getElementById('importKeyBtn').addEventListener('click', importKey);
             document.getElementById('exportAllKeysBtn').addEventListener('click', exportAllKeys);
+            document.getElementById('importStateBtn').addEventListener('click', importState);
             document.getElementById('saveSettingsBtn').addEventListener('click', saveSettings);
             document.getElementById('resetSettingsBtn').addEventListener('click', resetSettings);
             document.getElementById('zeroKeysBtn').addEventListener('click', zeroAllKeys);
@@ -1503,6 +1564,18 @@
                     keyData.expiry = expiryDate.toISOString();
                 }
                 
+                // Identify if this is an asymmetric key
+                const isAsymmetric = keyType === 'rsa' || keyType === 'rsa-4096' || 
+                                    keyType === 'ecc' || keyType === 'ecc-p384';
+                
+                // For asymmetric keys, set flags to indicate it has both public and private parts
+                if (isAsymmetric) {
+                    keyData.hasPublic = true;
+                    keyData.hasPrivate = true;
+                    // Use the key ID as the pairing ID for newly generated key pairs
+                    keyData.pairedKeyId = keyData.id;
+                }
+                
                 // Generate the actual cryptographic key based on type
                 if (keyType === 'aes') {
                     // For AES symmetric encryption
@@ -1539,6 +1612,35 @@
             } finally {
                 setLoading(false);
             }
+        }
+
+        function getPairedKeyIds(keyData) {
+            // If this key is already paired, return the stored pair ID
+            if (keyData.pairedKeyId) return keyData.pairedKeyId;
+            
+            // If this is a newly generated key, use its ID as the pair ID
+            if (keyData.hasPrivate && keyData.hasPublic) return keyData.id;
+            
+            // For imported keys without explicit pairing, check for potential matches
+            if ((keyData.type === 'rsa' || keyData.type === 'rsa-4096' || 
+                keyData.type === 'ecc' || keyData.type === 'ecc-p384') && 
+                (keyData.hasPublic || keyData.hasPrivate)) {
+                
+                const possiblePairs = keys.filter(k => 
+                    k.id !== keyData.id && 
+                    k.type === keyData.type && 
+                    ((keyData.hasPublic && k.hasPrivate) || (keyData.hasPrivate && k.hasPublic)) &&
+                    // For RSA, check modulus; for ECC, could check curve points
+                    // This is a simplified check - would need more robust comparison in production
+                    (k.publicKeyHash && keyData.publicKeyHash && k.publicKeyHash === keyData.publicKeyHash)
+                );
+                
+                if (possiblePairs.length > 0) {
+                    return possiblePairs[0].id;
+                }
+            }
+            
+            return null;
         }
 
         function zeroAllKeys() {
@@ -1633,6 +1735,10 @@
             keyData.algorithm = RSA_CONFIG.ALGORITHM;
             keyData.length = keySize;
             
+            // Compute a hash of the public key for pairing purposes
+            const publicKeyHash = await computeKeyHash(publicKey);
+            keyData.publicKeyHash = publicKeyHash;
+            
             // If password provided, encrypt the private key
             if (keyPassword) {
                 await encryptKeyWithPassword(keyData, keyPassword);
@@ -1662,10 +1768,19 @@
             keyData.algorithm = 'ECDH';
             keyData.curve = curve;
             
+            // Compute a hash of the public key for pairing purposes
+            const publicKeyHash = await computeKeyHash(publicKey);
+            keyData.publicKeyHash = publicKeyHash;
+            
             // If password provided, encrypt the private key
             if (keyPassword) {
                 await encryptKeyWithPassword(keyData, keyPassword);
             }
+        }
+
+        async function computeKeyHash(keyBuffer) {
+            const hashBuffer = await crypto.subtle.digest('SHA-256', keyBuffer);
+            return arrayBufferToBase64(hashBuffer);
         }
         
         async function encryptKeyWithPassword(keyData, password) {
@@ -1707,6 +1822,15 @@
         
         async function decryptKeyWithPassword(keyData, password) {
             try {
+                // Validate inputs
+                if (!keyData || !password) {
+                    throw new Error('Key data and password are required');
+                }
+                
+                if (!keyData.salt || !keyData.iv) {
+                    throw new Error('Key is missing salt or IV data');
+                }
+                
                 // Derive the key from password and salt
                 const salt = base64ToArrayBuffer(keyData.salt);
                 const derivedKey = await deriveKeyFromPassword(password, salt);
@@ -1717,7 +1841,12 @@
                 // Create a new object to avoid modifying the original
                 const decryptedKeyData = { ...keyData };
                 
+                // Add safety check for the key type
                 if (keyData.type === 'aes') {
+                    if (!keyData.key) {
+                        throw new Error('Missing encrypted key data');
+                    }
+                    
                     // Decrypt the AES key
                     const decryptedKey = await decryptWithDerivedKey(
                         derivedKey,
@@ -1731,6 +1860,10 @@
                     // Import the key to CryptoKey object for actual use
                     decryptedKeyData._cryptoKey = await importAESKey(decryptedKey);
                 } else if (keyData.type === 'rsa' || keyData.type === 'rsa-4096') {
+                    if (!keyData.privateKey) {
+                        throw new Error('Missing encrypted private key data');
+                    }
+                    
                     // Decrypt the RSA private key
                     const decryptedPrivateKey = await decryptWithDerivedKey(
                         derivedKey,
@@ -1746,11 +1879,18 @@
                         decryptedPrivateKey,
                         keyData.length || RSA_CONFIG.KEY_SIZE
                     );
-                    decryptedKeyData._publicKey = await importRSAPublicKey(
-                        base64ToArrayBuffer(keyData.publicKey),
-                        keyData.length || RSA_CONFIG.KEY_SIZE
-                    );
+                    
+                    if (keyData.publicKey) {
+                        decryptedKeyData._publicKey = await importRSAPublicKey(
+                            base64ToArrayBuffer(keyData.publicKey),
+                            keyData.length || RSA_CONFIG.KEY_SIZE
+                        );
+                    }
                 } else if (keyData.type === 'ecc' || keyData.type === 'ecc-p384') {
+                    if (!keyData.privateKey) {
+                        throw new Error('Missing encrypted private key data');
+                    }
+                    
                     // Decrypt the ECC private key
                     const decryptedPrivateKey = await decryptWithDerivedKey(
                         derivedKey,
@@ -1766,17 +1906,22 @@
                         decryptedPrivateKey,
                         keyData.curve || ECC_CONFIG.CURVE
                     );
-                    decryptedKeyData._publicKey = await importECCPublicKey(
-                        base64ToArrayBuffer(keyData.publicKey),
-                        keyData.curve || ECC_CONFIG.CURVE
-                    );
+                    
+                    if (keyData.publicKey) {
+                        decryptedKeyData._publicKey = await importECCPublicKey(
+                            base64ToArrayBuffer(keyData.publicKey),
+                            keyData.curve || ECC_CONFIG.CURVE
+                        );
+                    }
+                } else {
+                    throw new Error('Unsupported key type: ' + keyData.type);
                 }
                 
                 // Store the decrypted key data securely in memory
                 return safeMemory.store(decryptedKeyData);
             } catch (error) {
                 console.error('Decryption error:', error);
-                throw new Error('Invalid password or corrupted key');
+                throw new Error('Incorrect password or corrupted private key');
             }
         }
         
@@ -1794,11 +1939,24 @@
                 
                 const keyTypeDisplay = getKeyTypeDisplay(keyData);
                 const protectedBadge = keyData.protected ? ' 🔒' : '';
+                
+                // Determine key pair status badge
+                let keyPairBadge = '';
+                if (keyData.type === 'aes') {
+                    keyPairBadge = ''; // Don't show for symmetric keys
+                } else if (keyData.hasPrivate && keyData.hasPublic) {
+                    keyPairBadge = '<span class="key-pair-badge full">FULL KEY PAIR</span>';
+                } else if (keyData.hasPrivate) {
+                    keyPairBadge = '<span class="key-pair-badge private">PRIVATE KEY</span>';
+                } else if (keyData.hasPublic) {
+                    keyPairBadge = '<span class="key-pair-badge public">PUBLIC KEY</span>';
+                }
+                
                 let securityBadge = '';
                 
                 // Determine security level
                 let securityLevel = 'high';
-                if (!keyData.protected) {
+                if (!keyData.protected && keyData.hasPrivate) {
                     securityLevel = 'low';
                 } else if (keyData.type === 'aes') {
                     securityLevel = 'high';
@@ -1817,16 +1975,33 @@
                     expiryInfo = `<div class="key-expiry">Expires in ${daysToExpiry} days (${expiryDate.toLocaleDateString()})</div>`;
                 }
                 
+                // Determine which buttons to show based on key type
+                let keyActions = '';
+                
+                // Only show "Export Public" for asymmetric keys with public parts
+                if (keyData.type === 'aes') {
+                    keyActions += `<button class="btn-secondary" onclick="exportKey('${keyData.id}')">Export</button>`;
+                } else if (keyData.hasPublic) {
+                    keyActions += `<button class="btn-secondary" onclick="exportKey('${keyData.id}')">Export Public</button>`;
+                }
+                
+                // Add private key export button for asymmetric keys that have private parts
+                if (keyData.type !== 'aes' && keyData.hasPrivate) {
+                    keyActions += `<button class="btn-secondary private-key-btn" onclick="exportPrivateKey('${keyData.id}')">Private Key</button>`;
+                }
+                
+                keyActions += `<button class="btn-secondary" onclick="deleteKey('${keyData.id}')">Delete</button>`;
+                
                 keyItem.innerHTML = `
                     <div class="key-header">
                         <h3>${validator.sanitizeHTML(keyData.name)} (${keyTypeDisplay}${protectedBadge}) ${securityBadge}</h3>
+                        ${keyPairBadge}
                     </div>
                     <div class="key-meta">Created: ${new Date(keyData.created).toLocaleString()}</div>
                     <div class="key-meta">Algorithm: ${keyData.algorithm || ''} ${keyData.length ? keyData.length + ' bits' : keyData.curve || ''}</div>
                     ${expiryInfo}
                     <div class="key-actions">
-                        <button class="btn-secondary" onclick="exportKey('${keyData.id}')">Export</button>
-                        <button class="btn-secondary" onclick="deleteKey('${keyData.id}')">Delete</button>
+                        ${keyActions}
                     </div>
                 `;
                 
@@ -1854,17 +2029,46 @@
             encryptionKeySelect.innerHTML = '<option value="">Select a key...</option>';
             decryptionKeySelect.innerHTML = '<option value="">Select a key...</option>';
             
-            // Add options for each key
+            // Add options for encryption (symmetric and public keys only)
             keys.forEach(keyData => {
-                const option = document.createElement('option');
-                option.value = keyData.id;
-                
-                const keyTypeDisplay = getKeyTypeDisplay(keyData);
-                const protectedBadge = keyData.protected ? ' 🔒' : '';
-                option.text = `${keyData.name} (${keyTypeDisplay}${protectedBadge})`;
-                
-                encryptionKeySelect.appendChild(option.cloneNode(true));
-                decryptionKeySelect.appendChild(option);
+                // For encryption, include symmetric keys and asymmetric public keys
+                if (keyData.type === 'aes' || keyData.hasPublic) {
+                    const option = document.createElement('option');
+                    option.value = keyData.id;
+                    
+                    const keyTypeDisplay = getKeyTypeDisplay(keyData);
+                    const protectedBadge = keyData.protected ? ' 🔒' : '';
+                    
+                    let keyTypeBadge = '';
+                    if (keyData.type !== 'aes') {
+                        keyTypeBadge = keyData.hasPrivate && keyData.hasPublic ? ' [Full Pair]' : ' [Public]';
+                    }
+                    
+                    option.text = `${keyData.name} (${keyTypeDisplay}${keyTypeBadge}${protectedBadge})`;
+                    
+                    encryptionKeySelect.appendChild(option);
+                }
+            });
+            
+            // Add options for decryption (symmetric and private keys only)
+            keys.forEach(keyData => {
+                // For decryption, include symmetric keys and asymmetric private keys
+                if (keyData.type === 'aes' || keyData.hasPrivate) {
+                    const option = document.createElement('option');
+                    option.value = keyData.id;
+                    
+                    const keyTypeDisplay = getKeyTypeDisplay(keyData);
+                    const protectedBadge = keyData.protected ? ' 🔒' : '';
+                    
+                    let keyTypeBadge = '';
+                    if (keyData.type !== 'aes') {
+                        keyTypeBadge = keyData.hasPrivate && keyData.hasPublic ? ' [Full Pair]' : ' [Private]';
+                    }
+                    
+                    option.text = `${keyData.name} (${keyTypeDisplay}${keyTypeBadge}${protectedBadge})`;
+                    
+                    decryptionKeySelect.appendChild(option);
+                }
             });
         }
         
@@ -2478,7 +2682,7 @@
             keyFileInput.click();
         }
         
-        async function exportKey(keyId) {
+        async function exportKey(keyId, exportPrivate = false) {
             try {
                 const keyData = keys.find(k => k.id === keyId);
                 if (!keyData) {
@@ -2486,25 +2690,134 @@
                     return;
                 }
                 
+                // Check if trying to export a private key
+                const isAsymmetric = keyData.type === 'rsa' || keyData.type === 'rsa-4096' || 
+                                    keyData.type === 'ecc' || keyData.type === 'ecc-p384';
+                
+                let exportData = keyData;
+                let fileExtension = '.lim'; // Default for public or symmetric keys
+                
+                if (isAsymmetric && exportPrivate) {
+                    // If exporting private key part, prompt for password
+                    const exportPassword = prompt("Please enter a password to protect this private key:", "");
+                    if (!exportPassword) {
+                        // User cancelled or entered empty password
+                        if (!confirm("Warning: Exporting a private key without password protection is a security risk. Continue anyway?")) {
+                            return;
+                        }
+                    }
+                    
+                    // Prepare private key export - clone the key data
+                    exportData = {
+                        id: keyData.id,
+                        name: keyData.name,
+                        type: keyData.type,
+                        created: keyData.created,
+                        expiry: keyData.expiry,
+                        privateKey: keyData.privateKey,
+                        protected: keyData.protected,
+                        salt: keyData.salt,
+                        iv: keyData.iv,
+                        algorithm: keyData.algorithm,
+                        hasPrivate: true,
+                        hasPublic: false,
+                        pairedKeyId: keyData.id,
+                        publicKeyHash: keyData.publicKeyHash
+                    };
+                    
+                    // Add length or curve specific to RSA or ECC
+                    if (keyData.type === 'rsa' || keyData.type === 'rsa-4096') {
+                        exportData.length = keyData.length;
+                    } else if (keyData.type === 'ecc' || keyData.type === 'ecc-p384') {
+                        exportData.curve = keyData.curve;
+                    }
+                    
+                    // If a new password was provided, encrypt the private key with it
+                    if (exportPassword) {
+                        // Decrypt with original password if needed
+                        if (keyData.protected) {
+                            // This assumes the key is already unlocked in memory
+                            // In a real implementation, you'd need to prompt for the original password
+                            const decryptedKeyRef = await decryptKeyWithPassword(keyData, prompt("Enter the current key password:", ""));
+                            const decryptedKey = safeMemory.retrieve(decryptedKeyRef, true);
+                            exportData.privateKey = decryptedKey.privateKey;
+                            exportData.protected = false; // Reset protection status
+                        }
+                        
+                        // Encrypt with new password
+                        await encryptKeyWithPassword(exportData, exportPassword);
+                    }
+                    
+                    fileExtension = '.lem'; // Private key extension
+                } else if (isAsymmetric && !exportPrivate) {
+                    // Exporting public key - remove private key data
+                    exportData = {
+                        id: keyData.id,
+                        name: keyData.name,
+                        type: keyData.type,
+                        created: keyData.created,
+                        expiry: keyData.expiry,
+                        publicKey: keyData.publicKey,
+                        algorithm: keyData.algorithm,
+                        hasPublic: true,
+                        hasPrivate: false,
+                        pairedKeyId: keyData.id,
+                        publicKeyHash: keyData.publicKeyHash
+                    };
+                    
+                    // Add length or curve specific to RSA or ECC
+                    if (keyData.type === 'rsa' || keyData.type === 'rsa-4096') {
+                        exportData.length = keyData.length;
+                    } else if (keyData.type === 'ecc' || keyData.type === 'ecc-p384') {
+                        exportData.curve = keyData.curve;
+                    }
+                }
+                
                 // Convert key data to JSON and then to base64
-                const jsonText = JSON.stringify(keyData);
+                const jsonText = JSON.stringify(exportData);
                 const exportText = btoa(jsonText);
                 
-                // Create a download with .lim extension
+                // Create a download with the appropriate extension
                 const blob = new Blob([exportText], { type: 'application/octet-stream' });
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = `${keyData.name.replace(/[^a-z0-9]/gi, '_')}.lim`;
+                a.download = `${keyData.name.replace(/[^a-z0-9]/gi, '_')}${fileExtension}`;
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);
                 URL.revokeObjectURL(url);
                 
-                showStatus('keyStatus', `Key "${keyData.name}" exported as .lim file`, 'success');
+                const keyTypeText = exportPrivate ? "private key" : (isAsymmetric ? "public key" : "key");
+                showStatus('keyStatus', `Key "${keyData.name}" ${keyTypeText} exported as ${fileExtension} file`, 'success');
             } catch (error) {
                 console.error('Export error:', error);
                 showStatus('keyStatus', 'Export error: ' + error.message, 'error');
+            }
+        }
+
+        // Export private key function
+        async function exportPrivateKey(keyId) {
+            const keyData = keys.find(k => k.id === keyId);
+            if (!keyData) {
+                alert('Key not found');
+                return;
+            }
+            
+            // Check if this key has a private part
+            if (!keyData.hasPrivate) {
+                showStatus('keyStatus', 'This key does not have a private key component to export', 'error');
+                return;
+            }
+            
+            const confirmExport = confirm(
+                "WARNING: Exporting a private key is a security risk. " +
+                "Only export private keys if you absolutely need to use them on another device. " +
+                "Do you want to continue?"
+            );
+            
+            if (confirmExport) {
+                await exportKey(keyId, true);
             }
         }
 
@@ -2516,7 +2829,7 @@
                 keyFileInput = document.createElement('input');
                 keyFileInput.type = 'file';
                 keyFileInput.id = 'keyFileInput';
-                keyFileInput.accept = '.lim';
+                keyFileInput.accept = '.lim,.lem';
                 keyFileInput.style.display = 'none';
                 document.body.appendChild(keyFileInput);
                 
@@ -2534,6 +2847,10 @@
                 
                 setLoading(true);
                 const file = files[0];
+                
+                // Check file extension
+                const isPrivateKey = file.name.toLowerCase().endsWith('.lem');
+                const isPublicKey = file.name.toLowerCase().endsWith('.lim');
                 
                 // Read the file content
                 const reader = new FileReader();
@@ -2560,9 +2877,123 @@
                             throw new Error('Invalid key name format');
                         }
                         
+                        // Set hasPublic/hasPrivate flags if not already present (for backwards compatibility)
+                        if (keyData.type === 'aes') {
+                            // Symmetric keys always have both
+                            keyData.hasPublic = true;
+                            keyData.hasPrivate = true;
+                        } else {
+                            // For asymmetric keys, check what's in the file
+                            keyData.hasPublic = !!keyData.publicKey;
+                            keyData.hasPrivate = !!keyData.privateKey;
+                            
+                            // If extension is .lem but file doesn't have privateKey, warn
+                            if (isPrivateKey && !keyData.hasPrivate) {
+                                throw new Error('This .lem file does not contain a private key');
+                            }
+                            
+                            // If extension is .lim but file doesn't have publicKey, warn
+                            if (isPublicKey && !keyData.hasPublic) {
+                                throw new Error('This .lim file does not contain a public key');
+                            }
+                        }
+                        
+                        // If importing a private key that's password-protected, prompt for password
+                        if (keyData.hasPrivate && keyData.protected) {
+                        const importPassword = prompt("This private key is password-protected. Please enter the password to import it:", "");
+                        if (!importPassword) {
+                            throw new Error('Password is required to import this protected private key');
+                        }
+                        
+                        // Store the original password for later use
+                        keyData._importPassword = importPassword;
+                        }
+                        
                         // Check if a key with this ID already exists
                         const existingKeyIndex = keys.findIndex(k => k.id === keyData.id);
+                        
+                        // Check if this might be a private key for an existing public key or vice versa
+                        let isPotentialPair = false;
+                        let pairIndex = -1;
+                        
                         if (existingKeyIndex >= 0) {
+                            const existingKey = keys[existingKeyIndex];
+                            
+                            // If importing private key and existing key is public-only
+                            if (keyData.hasPrivate && !existingKey.hasPrivate && existingKey.hasPublic) {
+                                isPotentialPair = true;
+                                pairIndex = existingKeyIndex;
+                            }
+                            // If importing public key and existing key is private-only
+                            else if (keyData.hasPublic && !existingKey.hasPublic && existingKey.hasPrivate) {
+                                isPotentialPair = true;
+                                pairIndex = existingKeyIndex;
+                            }
+                        } else {
+                            // Check if there's a potential pair by public key hash
+                            if (keyData.publicKeyHash) {
+                                pairIndex = keys.findIndex(k => 
+                                    k.publicKeyHash === keyData.publicKeyHash && 
+                                    k.type === keyData.type &&
+                                    ((k.hasPrivate && !k.hasPublic && keyData.hasPublic) || 
+                                    (k.hasPublic && !k.hasPrivate && keyData.hasPrivate))
+                                );
+                                
+                                if (pairIndex >= 0) {
+                                    isPotentialPair = true;
+                                }
+                            }
+                        }
+                        
+                        if (isPotentialPair && pairIndex >= 0) {
+                            // We found a potential pair - ask if user wants to merge them
+                            const mergePair = confirm(
+                                `This appears to be the ${keyData.hasPrivate ? 'private' : 'public'} key part of an existing key. ` +
+                                `Would you like to merge them into a complete key pair?`
+                            );
+                            
+                            if (mergePair) {
+                                // Merge the keys
+                                const existingKey = keys[pairIndex];
+                                
+                                // If importing private key, add it to the existing key
+                                if (keyData.hasPrivate && !existingKey.hasPrivate) {
+                                    existingKey.privateKey = keyData.privateKey;
+                                    existingKey.hasPrivate = true;
+                                    
+                                    // Copy protection settings if the private key is protected
+                                    if (keyData.protected) {
+                                        existingKey.protected = true;
+                                        existingKey.salt = keyData.salt;
+                                        existingKey.iv = keyData.iv;
+                                    }
+                                }
+                                
+                                // If importing public key, add it to the existing key
+                                if (keyData.hasPublic && !existingKey.hasPublic) {
+                                    existingKey.publicKey = keyData.publicKey;
+                                    existingKey.hasPublic = true;
+                                    
+                                    // Update public key hash if needed
+                                    if (keyData.publicKeyHash) {
+                                        existingKey.publicKeyHash = keyData.publicKeyHash;
+                                    }
+                                }
+                                
+                                // Set paired ID for both to be the same
+                                existingKey.pairedKeyId = existingKey.id;
+                                
+                                await saveKeys();
+                                showStatus('keyStatus', `Key "${existingKey.name}" updated with ${keyData.hasPrivate ? 'private' : 'public'} key part`, 'success');
+                            } else {
+                                // User chose not to merge, import as separate key
+                                keyData.id = crypto.randomUUID(); // Generate new ID to avoid conflict
+                                keys.push(keyData);
+                                await saveKeys();
+                                showStatus('keyStatus', `Key "${keyData.name}" imported as separate key`, 'success');
+                            }
+                        } else if (existingKeyIndex >= 0) {
+                            // A key with this ID exists but isn't a potential pair
                             const overwrite = confirm(`A key with name "${keyData.name}" already exists. Overwrite?`);
                             if (overwrite) {
                                 keys[existingKeyIndex] = keyData;
@@ -2571,12 +3002,24 @@
                                 keyData.id = crypto.randomUUID();
                                 keys.push(keyData);
                             }
+                            await saveKeys();
+                            showStatus('keyStatus', `Key "${keyData.name}" imported successfully`, 'success');
                         } else {
+                            // No existing key with this ID
                             keys.push(keyData);
+                            await saveKeys();
+                            
+                            // Show appropriate message based on key type
+                            if (keyData.type === 'aes') {
+                                showStatus('keyStatus', `Symmetric key "${keyData.name}" imported successfully`, 'success');
+                            } else if (keyData.hasPrivate && keyData.hasPublic) {
+                                showStatus('keyStatus', `Complete asymmetric key pair "${keyData.name}" imported successfully`, 'success');
+                            } else if (keyData.hasPrivate) {
+                                showStatus('keyStatus', `Private key "${keyData.name}" imported successfully`, 'success');
+                            } else {
+                                showStatus('keyStatus', `Public key "${keyData.name}" imported successfully`, 'success');
+                            }
                         }
-                        
-                        await saveKeys();
-                        showStatus('keyStatus', `Key "${keyData.name}" imported successfully`, 'success');
                     } catch (error) {
                         console.error('Import error:', error);
                         showStatus('keyStatus', 'Import error: ' + error.message, 'error');
@@ -2646,22 +3089,131 @@
                     exportData = JSON.stringify(keys);
                 }
                 
-                // Create the download link
-                const blob = new Blob([exportData], { type: 'text/plain' });
+                // Create the download link - using application/octet-stream for better Android compatibility
+                const blob = new Blob([exportData], { type: 'application/octet-stream' });
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = 'Lemonade-keys-backup.json';
+                a.download = 'Lemonade-state.state';
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);
                 URL.revokeObjectURL(url);
                 
-                showStatus('keyStatus', 'All keys exported successfully', 'success');
+                showStatus('keyStatus', 'Application state exported successfully', 'success');
             } catch (error) {
                 console.error('Export error:', error);
                 showStatus('keyStatus', 'Export error: ' + error.message, 'error');
             }
+        }
+
+        function createStateFileInput() {
+            // Check if it already exists
+            let stateFileInput = document.getElementById('stateFileInput');
+            
+            if (!stateFileInput) {
+                stateFileInput = document.createElement('input');
+                stateFileInput.type = 'file';
+                stateFileInput.id = 'stateFileInput';
+                stateFileInput.accept = '.state,application/octet-stream';  // Accept both .state extension and octet-stream type
+                stateFileInput.style.display = 'none';
+                document.body.appendChild(stateFileInput);
+                
+                // Add event listener
+                stateFileInput.addEventListener('change', handleStateFileSelect);
+            }
+            
+            return stateFileInput;
+        }
+
+        async function handleStateFileSelect(event) {
+            try {
+                const files = event.target.files;
+                if (!files || files.length === 0) return;
+                
+                setLoading(true);
+                const file = files[0];
+                
+                // Read the file content
+                const reader = new FileReader();
+                
+                reader.onload = async function(e) {
+                    try {
+                        const importText = e.target.result;
+                        let importData;
+                        
+                        try {
+                            importData = JSON.parse(importText);
+                        } catch (error) {
+                            throw new Error('Invalid state file format');
+                        }
+                        
+                        // Check if it's a protected backup
+                        if (importData.format === 'LemonadeProtectedBackup') {
+                            const password = prompt("This state file is password-protected. Please enter the password to import:", "");
+                            if (!password) {
+                                throw new Error('Password is required to import this protected state file');
+                            }
+                            
+                            // Extract the salt, IV, and encrypted data
+                            const salt = base64ToArrayBuffer(importData.salt);
+                            const iv = base64ToArrayBuffer(importData.iv);
+                            const encryptedData = base64ToArrayBuffer(importData.data);
+                            
+                            // Derive the key from the password
+                            const derivedKey = await deriveKeyFromPassword(password, salt);
+                            
+                            // Decrypt the data
+                            const decryptedData = await decryptWithDerivedKey(derivedKey, encryptedData, iv);
+                            
+                            // Parse the decrypted data
+                            const decryptedText = new TextDecoder().decode(decryptedData);
+                            importData = JSON.parse(decryptedText);
+                        }
+                        
+                        // Validate the imported data
+                        if (!Array.isArray(importData)) {
+                            throw new Error('Invalid state data format');
+                        }
+                        
+                        // Confirmation before overwriting existing keys
+                        const confirmImport = confirm(`This will import ${importData.length} keys into your application. Continue?`);
+                        if (!confirmImport) return;
+                        
+                        // Import the keys
+                        keys = importData;
+                        await saveKeys();
+                        
+                        showStatus('keyStatus', `Application state with ${importData.length} keys imported successfully`, 'success');
+                    } catch (error) {
+                        console.error('State import error:', error);
+                        showStatus('keyStatus', 'State import error: ' + error.message, 'error');
+                    } finally {
+                        setLoading(false);
+                        // Reset the input so the same file can be selected again
+                        document.getElementById('stateFileInput').value = '';
+                    }
+                };
+                
+                reader.onerror = function() {
+                    setLoading(false);
+                    showStatus('keyStatus', 'Error reading the state file', 'error');
+                    document.getElementById('stateFileInput').value = '';
+                };
+                
+                reader.readAsText(file);
+                
+            } catch (error) {
+                console.error('State import error:', error);
+                showStatus('keyStatus', 'State import error: ' + error.message, 'error');
+                setLoading(false);
+                document.getElementById('stateFileInput').value = '';
+            }
+        }
+
+        function importState() {
+            const stateFileInput = createStateFileInput();
+            stateFileInput.click();
         }
         
         async function secureClipboardCopy(text) {
@@ -2751,12 +3303,18 @@
         }
         
         function base64ToArrayBuffer(base64) {
-            const binaryString = atob(base64);
-            const bytes = new Uint8Array(binaryString.length);
-            for (let i = 0; i < binaryString.length; i++) {
-                bytes[i] = binaryString.charCodeAt(i);
+            try {
+                // Try regular base64 decoding
+                const binaryString = atob(base64);
+                const bytes = new Uint8Array(binaryString.length);
+                for (let i = 0; i < binaryString.length; i++) {
+                    bytes[i] = binaryString.charCodeAt(i);
+                }
+                return bytes.buffer;
+            } catch (error) {
+                console.error('Base64 decoding error:', error);
+                throw new Error('Invalid base64 data: ' + error.message);
             }
-            return bytes.buffer;
         }
         
         async function deriveKeyFromPassword(password, salt) {
@@ -2940,6 +3498,7 @@
         
         // Make functions globally available for onclick handlers
         window.exportKey = exportKey;
+        window.exportPrivateKey = exportPrivateKey;
         window.deleteKey = deleteKey;
 
         // PWA Support
