@@ -1,430 +1,289 @@
 # [Lemonade](https://elkmire.github.io/Lemonade/) <- Click Here
 
-## 1. Introduction
+## Table of Contents
 
-Lemonade is a secure, browser-based encryption application designed to provide strong message and file encryption without requiring any server-side processing. All cryptographic operations occur entirely within your browser, ensuring your sensitive data never leaves your device.
+1. [Introduction](#introduction)
+2. [Getting Started](#getting-started)
+3. [Key Management](#key-management)
+4. [Encrypting & Decrypting](#encrypting--decrypting)
+5. [Security Features](#security-features)
+6. [File Types](#file-types)
+7. [Installation as a PWA](#installation-as-a-pwa)
+8. [Settings & Configuration](#settings--configuration)
+9. [Troubleshooting & FAQ](#troubleshooting--faq)
 
-Key features:
-- End-to-end encryption using industry-standard algorithms
-- Multiple encryption methods (symmetric and asymmetric)
-- Local key storage with password protection
-- File and text encryption capabilities
-- Progressive Web App support for offline usage
-- Dark mode interface
+## Introduction
 
-Lemonade was designed as an "alternate security method" with a focus on client-side operations, making it suitable for users who need secure communications without relying on third-party services.
+Lemonade is a secure, browser-based encryption tool designed for privacy-conscious users who want to protect their sensitive communications without relying on third-party services. The app's name reflects its philosophy: making encryption refreshingly simple.
 
-## 2. Getting Started
+### Key Benefits
 
-### Installation Options
+- **Zero-server architecture**: All encryption happens in your browser - no data is ever sent to remote servers
+- **Military-grade encryption**: Uses industry-standard AES-256, RSA-2048/4096, and ECC encryption
+- **Works offline**: Can be installed as a Progressive Web App (PWA) for use without internet
+- **No accounts required**: No sign-ups, no tracking, and no personal information collected
+- **Open design**: Straightforward, auditable code
+- **Cross-device compatibility**: Export and import keys between different devices
 
-Lemonade can be used in two ways:
-1. **Browser-based**: Simply navigate to the Lemonade website to use it directly in your browser
-2. **Installed PWA**: Install it as a Progressive Web App for offline access and a more app-like experience
+## Getting Started
 
-### Installing as a PWA
+### Interface Overview
 
-To install Lemonade as a PWA:
-1. Navigate to the Settings tab
-2. Click the "Install Lemonade App" button when it becomes available
-3. Follow your browser's installation prompts
+Lemonade features a clean, intuitive interface with four main tabs:
 
-### Initial Setup
+1. **Encrypt**: Encrypt messages or files with your selected encryption key
+2. **Decrypt**: Decrypt messages or files with the appropriate key
+3. **Key Management**: Create, import, export, and manage your encryption keys
+4. **Settings**: Configure application preferences and security settings
 
-Before you can encrypt or decrypt messages, you'll need to create at least one encryption key:
-1. Go to the "Key Management" tab
-2. Create a new key (details in the Key Management section)
-3. Once you have a key, you can begin encrypting and decrypting messages
+### First-time Setup
 
-## 3. Key Management
+When you first open Lemonade, you'll want to:
 
-The "Key Management" tab is where you create, import, export, and manage your encryption keys.
+1. Generate at least one encryption key (see [Key Management](#key-management))
+2. Configure your security settings (see [Settings & Configuration](#settings--configuration))
+3. Consider installing the app as a PWA for offline use (see [Installation as a PWA](#installation-as-a-pwa))
 
-### Creating Keys
+## Key Management
 
-To create a new encryption key:
-1. Enter a descriptive name in the "Key Name" field
-2. Select your desired key type (see Key Types section below)
-3. Choose an expiration period (optional but recommended)
-4. Enter a strong password (optional but highly recommended)
-5. Confirm your password
-6. Click "Generate New Key"
+Lemonade's security is built around encryption keys that you create and control. Understanding the different key types and how to manage them is essential.
 
 ### Key Types
 
-Lemonade supports several encryption methods, each with specific implementation details and use cases. All keys are stored and shared in Lemonade's .lim file format.
+Lemonade supports three main types of encryption:
 
-#### AES-GCM (Symmetric) - 256 bits
+1. **AES-GCM (Symmetric)**: 
+   - Uses the same key for encryption and decryption
+   - 256-bit encryption strength (very secure)
+   - Best for: Personal data encryption or when you can securely share the key with recipients
 
-**Implementation in Lemonade:**
-- The .lim file contains a single 256-bit encryption key
-- When password-protected, the key itself is encrypted using a key derived from your password
-- Uses a 12-byte random Initialization Vector (IV) for each encryption operation
-- Includes a 128-bit authentication tag to verify message integrity
+2. **RSA-OAEP (Asymmetric)**:
+   - Uses a key pair: public key (for encryption) and private key (for decryption)
+   - Available in 2048-bit and 4096-bit strength
+   - Best for: Secure communication where recipients can encrypt with your public key, but only you can decrypt with your private key
 
-**Usage Process:**
-1. Both sender and recipient must have identical copies of the same .lim file
-2. The sender encrypts using this shared key
-3. The recipient decrypts using the same key
-4. If password-protected, both parties need the password to use the key
+3. **ECC (Elliptic Curve Cryptography)**:
+   - Modern asymmetric encryption with smaller key sizes
+   - Available in P-256 and P-384 curves
+   - Best for: Similar use cases as RSA but with better performance and smaller encrypted data
 
-**Security Profile:**
-- Extremely strong encryption (2^256 possible keys)
-- Currently considered quantum-resistant
-- Security relies entirely on keeping the .lim file secure
-- If someone obtains the .lim file, they can decrypt all messages (unless password-protected)
+### Generating Keys
 
-**Best Used For:**
-- Personal encryption where you're both sender and recipient
-- Secure communication between trusted parties who can safely exchange the .lim file
-- Encrypting large files efficiently (fastest performance of all key types)
+To create a new encryption key:
 
-#### RSA-OAEP (Asymmetric) - 2048 bits
+1. Navigate to the "Key Management" tab
+2. Enter a descriptive name for your key
+3. Select the key type from the dropdown menu
+4. Set an expiration date (recommended for security)
+5. Create a strong password to protect your key (highly recommended)
+6. Click "Generate New Key"
 
-**Implementation in Lemonade:**
-- The .lim file contains both public and private key components
-- Lemonade uses a hybrid approach:
-  1. Generates a random one-time AES-256 key for each message
-  2. Encrypts the actual data with this AES key
-  3. Encrypts the AES key with the recipient's RSA public key
-  4. Includes both the RSA-encrypted AES key and the AES-encrypted message
+### Key Password Protection
 
-**Usage Process:**
-1. The recipient generates an RSA key pair and exports their .lim file
-2. The recipient shares their .lim file with potential senders
-3. The sender imports the recipient's .lim file into their Lemonade app
-4. The sender encrypts using the recipient's public key (from the .lim file)
-5. Only the recipient with the private key can decrypt the message
-
-**Security Profile:**
-- 2048-bit key length (equivalent to approximately 112 bits of symmetric security)
-- Vulnerable to quantum computing attacks (Shor's algorithm)
-- Sharing the .lim file doesn't compromise decryption security
-- Even if the sender's computer is compromised after sending, past messages remain secure
-
-**Best Used For:**
-- One-way secure messaging where public keys can be exchanged over insecure channels
-- Scenarios where the key exchange needs to happen only once for ongoing secure communication
-- Communications where the recipient wants to verify the message hasn't been tampered with
-
-#### RSA-OAEP (Asymmetric) - 4096 bits
-
-**Implementation in Lemonade:**
-- Identical hybrid approach to 2048-bit RSA, but with larger key size
-- Uses more computational resources for both encryption and decryption
-- The .lim file is larger due to the increased key size
-
-**Usage Process:**
-- Same process as RSA-2048, but with higher security margin
-- Noticeably slower encryption/decryption operations
-
-**Security Profile:**
-- 4096-bit key length (equivalent to approximately 128 bits of symmetric security)
-- Still vulnerable to quantum computing, but requires more qubits to break
-- Significantly more resistant to factoring attacks using classical computers
-
-**Best Used For:**
-- High-security communications where the strongest non-quantum protection is desired
-- Cases where the performance impact of larger keys is acceptable
-- Long-term storage of sensitive information that may need to remain secure for many years
-
-#### ECC (Asymmetric) - P-256
-
-**Implementation in Lemonade:**
-- The .lim file contains both public and private key components based on the P-256 curve
-- Uses a sophisticated hybrid approach:
-  1. Creates an ephemeral ECC key pair for each encryption operation
-  2. Uses ECDH (Elliptic Curve Diffie-Hellman) to derive a shared secret
-  3. Derives an AES key from this shared secret
-  4. Encrypts the actual message with the derived AES key
-  5. Includes the ephemeral public key with the message for decryption
-
-**Usage Process:**
-1. The recipient generates an ECC key pair and exports their .lim file
-2. The recipient shares their .lim file with potential senders
-3. The sender imports the recipient's .lim file
-4. The sender encrypts using the recipient's public key
-5. Only the recipient with the corresponding private key can decrypt
-
-**Security Profile:**
-- P-256 curve provides security equivalent to approximately 128 bits of symmetric security
-- Much smaller key size than equivalent-strength RSA (256 bits vs 3072 bits)
-- Provides forward secrecy through ephemeral key generation
-- Vulnerable to quantum computing attacks
-
-**Best Used For:**
-- Secure messaging on mobile or resource-constrained devices
-- Applications where efficiency is important but strong security is still required
-- Systems where key and message size need to be minimized
-
-#### ECC (Asymmetric) - P-384
-
-**Implementation in Lemonade:**
-- Same implementation approach as P-256, but using the larger P-384 curve
-- The .lim file contains the larger curve parameters and key components
-- Uses the same ephemeral key ECDH approach for each message
-
-**Usage Process:**
-- Identical to P-256 but with higher security margin
-- Slightly slower than P-256 but still much faster than RSA-4096
-
-**Security Profile:**
-- P-384 curve provides security equivalent to approximately 192 bits of symmetric security
-- Stronger than RSA-4096 with much smaller key sizes
-- Still vulnerable to quantum computing attacks
-- Excellent forward secrecy properties
-
-**Best Used For:**
-- High-security applications where ECC is preferred
-- Perfect balance of strong security, reasonable performance, and small key size
-- Users who need the strongest currently available ECC option in Lemonade
-
-### Password Protection
-
-Adding password protection to your keys provides an additional layer of security. With password protection:
-- The key itself is encrypted using a key derived from your password
+When you protect a key with a password:
 - You'll need to enter the password each time you use the key
-- Even if someone gains access to your device or exported keys, they won't be able to use them without the password
+- The key is encrypted on your device with that password
+- If you forget the password, the key cannot be recovered
 
-To set a password:
-1. When creating a key, enter a strong password in the "Key Password" field
-2. The password strength meter will help you evaluate your password's security
-3. Confirm the password and generate the key
+### Importing & Exporting Keys
 
-### Key Expiration
+Lemonade allows you to share and backup keys:
 
-Setting expiration dates for keys is a security best practice:
+**Exporting Keys**:
+1. In the "Key Management" tab, find the key you want to export
+2. For asymmetric keys (RSA/ECC), click "Export Public" to share your public key with others
+3. For all key types, you can export the complete key (including private components, if applicable)
+4. Use "Export Private Key" with extreme caution - only for backup or transfer to your own devices
 
-1. When creating a key, select a time period from the "Key Expiration" dropdown
-2. Options range from 30 days to 1 year
-3. After expiration, keys will be automatically removed from your key storage
-4. This limits the impact of a potentially compromised key
+**Importing Keys**:
+1. Click "Import Key" in the "Key Management" tab
+2. Select the key file (.lim for public keys, .lem for private keys)
+3. Follow the prompts, entering any required passwords
 
-### Importing and Exporting Keys
+**Backing Up All Keys**:
+1. Click "Export State" to create a backup of all your keys
+2. Enter a password to protect the backup file
+3. Store the .state file securely
 
-#### Exporting Individual Keys
-1. In the Key Management tab, find the key you want to export
-2. Click the "Export" button for that key
-3. The key will download as a .lim file (Lemonade Key Format)
+## Encrypting & Decrypting
 
-For RSA and ECC keys, the .lim file contains both the public and private key components. The public key portion can be safely shared with others to allow them to encrypt messages that only you can decrypt with your private key.
-
-#### Exporting All Keys
-1. In the Key Management tab, click "Export All Keys"
-2. You'll be prompted to set a password for the backup (highly recommended)
-3. All keys will be exported to a single JSON file
-4. This JSON contains your complete key collection and should be kept secure
-
-#### Importing Keys
-1. In the Key Management tab, click "Import Key"
-2. Select a .lim file containing a previously exported key
-3. If a key with the same ID exists, you'll be asked if you want to overwrite it
-
-#### Sharing Public Keys
-For asymmetric encryption (RSA and ECC), you can:
-1. Export your key as a .lim file
-2. Share this file with someone who wants to send you encrypted messages
-3. They can import your .lim file into their Lemonade app
-4. They can then encrypt messages that only you can decrypt
-
-Note: When using password-protected keys, the recipient doesn't need your password to encrypt messages to you, but you'll need your password to decrypt their messages.
-
-### Deleting Keys
-
-To delete a key:
-1. In the Key Management tab, find the key you want to delete
-2. Click the "Delete" button for that key
-3. Confirm the deletion when prompted
-
-To delete all keys:
-1. At the bottom of the Key Management tab, click "ZERO ALL KEYS"
-2. Confirm the deletion when prompted
-
-## 4. Encrypting Messages
-
-To encrypt a message or file:
+### Encrypting Messages
 
 1. Navigate to the "Encrypt" tab
-2. Enter your message in the "To Encrypt" text area, or click "Browse Files" to select a file
-3. Choose an encryption key from the dropdown menu
-4. If the key is password-protected, enter the password
+2. Type or paste your message in the "To Encrypt" field
+3. Select an encryption key from the dropdown
+4. Enter the key password if required
 5. Click "Encrypt Data"
-6. The encrypted output will appear in the "Encrypted Data" text area
-7. You can download the encrypted data as a file or copy it to your clipboard
+6. Copy the encrypted output or download it as a file
 
-### Key Selection for Encryption
+### Encrypting Files
 
-When selecting a key for encryption:
+1. On the "Encrypt" tab, click "Browse Files"
+2. Select the file you want to encrypt
+3. Choose an encryption key
+4. Click "Encrypt Data"
+5. Download the encrypted file (.lmn format)
 
-- **For your own use**: Choose any key type you own (AES, RSA, or ECC)
-- **For sending to others**:
-  - If using symmetric encryption (AES): Both you and the recipient must have the same key (share the .lim file securely)
-  - If using asymmetric encryption (RSA or ECC): Use the recipient's public key (contained in their .lim file) to encrypt. They will decrypt with their private key
-
-### File Encryption
-
-When encrypting a file:
-1. Click "Browse Files" and select the file you want to encrypt
-2. After encryption, the file data will be encrypted and can be downloaded with a .lmn extension (.lmn is the Lemonade encrypted message format)
-3. The encrypted file contains both the encrypted data and metadata about the file, including:
-   - The original filename
-   - File size
-   - Encryption algorithm used
-   - Key ID used for encryption
-   - Timestamp of encryption
-
-## 5. Decrypting Messages
-
-To decrypt a message or file:
+### Decrypting Messages
 
 1. Navigate to the "Decrypt" tab
-2. Paste the encrypted message into the "To Decrypt" text area, or click "Browse Files" to select an encrypted file
-3. Choose the appropriate decryption key from the dropdown menu (must be the same key used for encryption)
-4. If the key is password-protected, enter the password
+2. Paste the encrypted message in the "To Decrypt" field
+3. Select the appropriate decryption key
+4. Enter the key password if required
 5. Click "Decrypt Data"
-6. The decrypted output will appear in the "Decrypted Data" text area
-7. You can download the decrypted data or copy it to your clipboard
+6. View the decrypted message
 
-### File Decryption
+### Decrypting Files
 
-When decrypting a file:
-1. Upload the .lmn file or paste the encrypted file contents into the "To Decrypt" field
-2. After decryption, the original file name and size will be displayed
-3. You can download the decrypted file with its original name
+1. On the "Decrypt" tab, click "Browse Files"
+2. Select the encrypted file (.lmn format)
+3. Choose the appropriate decryption key
+4. Click "Decrypt Data"
+5. Download the decrypted file
 
-## 6. Security Settings
+## Security Features
 
-The "Settings" tab allows you to configure various security options.
+### Local-Only Processing
+
+Lemonade operates entirely within your browser:
+- No data is transmitted to any server
+- All cryptographic operations are performed using the Web Crypto API
+- No analytics or tracking code is included
+
+### Key Storage Security
+
+Your keys are stored in one of two locations, depending on your settings:
+- Browser's IndexedDB (default, more secure)
+- Local storage (fallback option)
+
+Both options keep data on your device only, but IndexedDB provides better isolation.
+
+### Optional Security Enhancements
+
+Lemonade offers additional security options:
+- **Session-only mode**: Keys are deleted when the browser closes
+- **Password enforcement**: Require passwords for all keys
+- **Key expiration**: Automatically invalidate keys after a specified period
+- **PBKDF2 Iterations**: Adjust the computational work factor for password derivation
+
+### Security Indicators
+
+Keys display security badges:
+- **HIGH**: AES-256, RSA-4096, or ECC-P384 with password protection
+- **MEDIUM**: RSA-2048 or ECC-P256 with password protection
+- **LOW**: Any key without password protection
+
+## File Types
+
+Lemonade uses several file extensions:
+
+- **.lim**: Public key file (can be shared safely)
+  - Contains only the public portion of an asymmetric key
+  - Used by others to encrypt messages only you can decrypt
+  - Safe to share via email, messaging, etc.
+
+- **.lem**: Private key file (keep secure!)
+  - Contains the private portion of an asymmetric key
+  - Can decrypt messages encrypted with the corresponding public key
+  - Should be password-protected and kept strictly confidential
+
+- **.state**: Application state backup
+  - Contains all your keys (both public and private)
+  - Should always be encrypted with a strong password
+  - For personal backup or transfer to your own devices only
+
+- **.lmn**: Encrypted file
+  - Contains data encrypted with Lemonade
+  - Can be decrypted only with the appropriate key
+
+## Installation as a PWA
+
+Lemonade can be installed as a Progressive Web App, allowing it to:
+- Work offline without an internet connection
+- Launch from your device's home screen or app menu
+- Run in its own window without browser chrome
+
+To install:
+
+1. Navigate to the "Settings" tab
+2. Find the "Install App" section
+3. Click "Install Lemonade App" (button will be enabled when installation is available)
+
+Alternatively, most browsers provide an installation icon in the address bar or menu when a site can be installed as a PWA.
+
+### PWA Benefits
+
+- **Offline Access**: Use Lemonade without internet connectivity
+- **Enhanced Security**: Runs in an isolated context
+- **Better Performance**: Faster loading times after installation
+- **Reduced Browser Dependencies**: Works more like a native app
+
+## Settings & Configuration
 
 ### Storage Options
 
-#### IndexedDB vs LocalStorage
-- **Use IndexedDB for key storage**: Enabled by default. IndexedDB provides more secure and robust storage for your keys.
-- **Session-only mode**: When enabled, keys aren't saved when the browser closes, providing additional security at the cost of convenience.
+- **Use IndexedDB**: More secure key storage (recommended)
+- **Session-only mode**: Keys aren't saved when browser closes
 
 ### Security Parameters
 
-#### Password Protection and Key Expiration
-- **Enforce password protection for keys**: When enabled, all new keys must have password protection.
-- **Enforce key expiration**: When enabled, all new keys must have an expiration date.
+- **Enforce password protection**: Require passwords for all keys
+- **Enforce key expiration**: Require expiration dates for all keys
+- **PBKDF2 Iterations**: Higher values increase security but may slow down password processing
 
-#### PBKDF2 Iterations
-This setting controls how many iterations are used when deriving keys from passwords:
-- Higher values provide better security but slower performance
-- Lower values are faster but provide less protection against brute force attacks
-- Default is 100,000 iterations
+### Appearance
 
-### Security Posture
+- **Dark Mode**: Toggle between light and dark themes
 
-Each key displays its security level:
-- **HIGH**: Password-protected keys using AES-256, RSA-4096, or ECC P-384
-- **MEDIUM**: Password-protected keys using RSA-2048 or ECC P-256
-- **LOW**: Any key without password protection
+### Saving Settings
 
-## 7. Progressive Web App Features
+Click "Save Settings" to apply any changes. Settings are stored locally on your device.
 
-Lemonade is built as a Progressive Web App (PWA), which provides several advantages:
+## Troubleshooting & FAQ
 
-### Offline Capability
-- Once installed, Lemonade works entirely offline
-- All encryption/decryption happens locally in your browser
-- No internet connection required after initial installation
+### I forgot my key password. Can I recover it?
 
-### Installation
-- Install Lemonade on your device for quick access
-- Chromium-based or Safari required
-- Works on desktop and mobile devices
-- Runs in a standalone window without browser controls
+No. Lemonade uses strong encryption for password protection. If you forget a key password, that key cannot be recovered. This is a security feature, not a bug.
 
-### Updates
-- Lemonade automatically checks for updates when online
-- Updates are applied when the app is restarted
-- Your keys and settings are preserved during updates
+### Can I use Lemonade to encrypt emails?
 
-## 8. Security Best Practices
+Lemonade doesn't integrate directly with email clients, but you can:
+1. Encrypt your message in Lemonade
+2. Copy the encrypted text
+3. Paste it into your email
+4. Send your public key file (.lim) to new correspondents beforehand
 
-For maximum security when using Lemonade:
+### Is my data sent to any servers?
 
-### Key Management
-- Use password protection for all keys
-- Set expiration dates for sensitive keys
-- Export and backup your keys regularly, with password protection
-- Use stronger key types (AES-256, RSA-4096, ECC P-384) for sensitive data
+No. Lemonade operates entirely within your browser. No data is ever sent to remote servers—your messages, files, and keys never leave your device.
 
-### Application Settings
-- Enable "Enforce password protection" and "Enforce key expiration"
-- Consider using "Session-only mode" for temporary encryption needs
-- Use higher PBKDF2 iterations (200,000+) for stronger password protection
+### How do I share an encrypted file with someone?
 
-### Safe Usage
-- Keep your device and browser updated
-- Be cautious about who can access your device
-- Clear the decrypted data after use by clicking "Clear All"
+1. Obtain their public key file (.lim)
+2. Import their public key in your Lemonade app
+3. Encrypt your file using their public key
+4. Send them the encrypted file (.lmn)
+5. They can decrypt it using their private key
 
-## 9. Troubleshooting
+### What if I need to use Lemonade on multiple devices?
 
-### Common Issues and Solutions
+You have two options:
+1. Export individual keys and import them on each device
+2. Export your entire state (.state file), and import it on each device
 
-#### "Invalid password or corrupted key" Error
-- Make sure you're using the correct password for the key
-- If you've forgotten the password, you cannot recover the key - you'll need to create a new one
+### What encryption standards does Lemonade use?
 
-#### "This message was not encrypted with the selected key" Error
-- Make sure you're using the same key that was used to encrypt the message
-- If you're decrypting a message from someone else, ensure you have the correct key
+- AES-GCM with 256-bit keys for symmetric encryption
+- RSA-OAEP with SHA-256 for asymmetric encryption (2048 or 4096-bit keys)
+- ECDH with P-256 or P-384 curves for elliptic curve encryption
+- PBKDF2 for key derivation from passwords
 
-#### Storage Issues
-- If keys aren't being saved, check your browser's privacy settings
-- Some private browsing modes prevent persistent storage
-- Try switching between IndexedDB and localStorage in settings
+### Why does Lemonade use local storage instead of servers?
 
-#### Installation Problems
-- PWA installation requires a secure context (HTTPS)
-- Some browsers have specific requirements for PWA installation (Chromium or Safari)
-- Ensure you're using a modern, updated browser
-
-## 10. Technical Details
-
-### Encryption Algorithms
-
-#### AES-GCM
-- 256-bit key length
-- 12-byte IV (Initialization Vector)
-- 128-bit authentication tag
-- Used for direct encryption or as part of hybrid encryption
-
-#### RSA-OAEP
-- Available in 2048-bit and 4096-bit key lengths
-- Uses SHA-256 for the hash function
-- Used in a hybrid scheme with AES-GCM for message encryption
-
-#### ECC (Elliptic Curve Cryptography)
-- Available with P-256 and P-384 curves
-- Used with ECDH for key exchange
-- Paired with AES-GCM for hybrid encryption
-
-### Password-Based Key Derivation
-
-- Uses PBKDF2 (Password-Based Key Derivation Function 2)
-- Configurable iteration count (default: 100,000)
-- SHA-256 hash function
-- 16-byte random salt per key
-- Derives a 256-bit key used for AES-GCM encryption of the actual cryptographic keys
-
-### Local Storage
-
-Two primary storage mechanisms:
-- IndexedDB: Primary storage method, more secure and with larger capacity
-- localStorage: Fallback storage method with broader compatibility
-
-When using password protection, the keys themselves are encrypted before storage using the derived key from the password.
-
-### Data Processing
-
-All cryptographic operations happen client-side using the Web Cryptography API:
-- No data is ever sent to a server
-- Encryption/decryption occurs entirely in the browser
-- The service worker provides offline capability while maintaining security
+1. **Security**: No server means no central point of attack
+2. **Privacy**: Your data never leaves your device
+3. **Reliability**: Works offline and doesn't depend on server availability
+4. **Simplicity**: No accounts, payments, or maintenance required
 
 ---
 
