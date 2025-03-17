@@ -320,23 +320,58 @@
             padding: 15px;
             margin-bottom: 10px;
             position: relative;
+            display: flex;
+            flex-direction: column;
         }
+
         
         .key-item h3 {
             margin-top: 0;
             margin-bottom: 10px;
         }
+
+        .key-header {
+            text-align: center;
+            margin-bottom: 15px;
+        }
         
         .key-actions {
-            position: absolute;
-            top: 15px;
-            right: 15px;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 15px;
+            border-top: 1px solid var(--border-color);
+            padding-top: 15px;
         }
         
         .key-meta {
             font-size: 0.9rem;
             color: #888;
             margin-bottom: 5px;
+        }
+
+        .btn-zero {
+            background-color: #cc3300;
+            color: white;
+            margin-top: 20px;
+            width: 100%;
+            font-weight: bold;
+            border: 1px solid #aa2200;
+        }
+
+        .btn-zero:hover {
+            background-color: #ff3300;
+        }
+
+        /* Dark mode override to ensure it stays red */
+        body.dark-mode .btn-zero {
+            background-color: #ff3131; /* Neon Red */
+            color: white;
+            border: 1px solid #cc0000;
+        }
+
+        body.dark-mode .btn-zero:hover {
+            background-color: #ff5555; /* Lighter Neon Red */
         }
         
         .loading-overlay {
@@ -419,6 +454,38 @@
             background-color: rgba(204, 51, 0, 0.1);
             color: var(--security-low);
             border: 1px solid var(--security-low);
+        }
+
+        /* Security badge pulse animation */
+        @keyframes securityPulse {
+            0% {
+                box-shadow: 0 0 5px currentColor;
+            }
+            50% {
+                box-shadow: 0 0 15px currentColor;
+            }
+            100% {
+                box-shadow: 0 0 5px currentColor;
+            }
+        }
+
+        /* Add pulsing effect to security badges in dark mode */
+        body.dark-mode .security-badge {
+            animation: securityPulse 2s infinite;
+            transition: all 0.3s ease;
+        }
+
+        /* Enhanced colors for dark mode security badges */
+        body.dark-mode .security-badge.high {
+            box-shadow: 0 0 5px var(--security-high);
+        }
+
+        body.dark-mode .security-badge.medium {
+            box-shadow: 0 0 5px var(--security-medium);
+        }
+
+        body.dark-mode .security-badge.low {
+            box-shadow: 0 0 5px var(--security-low);
         }
         
         .config-toggle {
@@ -711,7 +778,7 @@
                 <h2>Key Management</h2>
                 
                 <div class="security-info">
-                    <strong>Security Note:</strong> All keys are stored locally in your browser's protected storage and never sent to any server. For maximum security, use password protection for important keys.
+                    <strong>Security Note:</strong> All keys are stored locally in your browser's protected storage and never sent to any server.
                 </div>
                 
                 <div class="form-group">
@@ -765,6 +832,10 @@
                 <div class="btn-group">
                     <button id="importKeyBtn" class="btn-secondary">Import Key</button>
                     <button id="exportAllKeysBtn" class="btn-secondary">Export All Keys</button>
+                </div>
+
+                <div style="text-align: center;">
+                    <button id="zeroKeysBtn" class="btn-zero">ZERO ALL KEYS</button>
                 </div>
                 
                 <div id="keyStatus" class="status"></div>
@@ -1110,6 +1181,7 @@
             document.getElementById('exportAllKeysBtn').addEventListener('click', exportAllKeys);
             document.getElementById('saveSettingsBtn').addEventListener('click', saveSettings);
             document.getElementById('resetSettingsBtn').addEventListener('click', resetSettings);
+            document.getElementById('zeroKeysBtn').addEventListener('click', zeroAllKeys);
             
             // Key select changes
             encryptionKeySelect.addEventListener('change', handleEncryptionKeyChange);
@@ -1468,6 +1540,48 @@
                 setLoading(false);
             }
         }
+
+        function zeroAllKeys() {
+            // Check if there are any keys to delete
+            if (keys.length === 0) {
+                showStatus('keyStatus', 'No keys to delete', 'warning');
+                return;
+            }
+            
+            // Show confirmation dialog
+            const confirmZero = confirm('WARNING: This will permanently delete ALL your encryption keys. This action CANNOT be undone.\n\nAre you absolutely sure you want to continue?');
+            
+            if (confirmZero) {
+                // User confirmed, delete all keys
+                const keyCount = keys.length;
+                
+                // Clear keys array
+                keys = [];
+                
+                // Clear from storage
+                if (appSettings.useIndexedDB && db) {
+                    clearDatabase(KEYS_STORE)
+                        .then(() => {
+                            console.log('All keys cleared from database');
+                        })
+                        .catch(error => {
+                            console.error('Error clearing keys from database:', error);
+                        });
+                } else {
+                    localStorage.removeItem('LemonadeKeys');
+                }
+                
+                // Update UI
+                updateKeysList();
+                updateKeySelects();
+                
+                // Show status message
+                showStatus('keyStatus', `All keys (${keyCount}) have been permanently deleted`, 'success');
+            } else {
+                // User canceled
+                showStatus('keyStatus', 'Key deletion canceled', 'info');
+            }
+        }
         
         async function generateAESKey(keyData, keyPassword) {
             // Generate a random AES key
@@ -1689,7 +1803,7 @@
                 } else if (keyData.type === 'aes') {
                     securityLevel = 'high';
                 } else if ((keyData.type === 'rsa' && keyData.length < 3072) || 
-                           (keyData.type === 'ecc' && keyData.curve === 'P-256')) {
+                        (keyData.type === 'ecc' && keyData.curve === 'P-256')) {
                     securityLevel = 'medium';
                 }
                 
@@ -1704,7 +1818,9 @@
                 }
                 
                 keyItem.innerHTML = `
-                    <h3>${validator.sanitizeHTML(keyData.name)} (${keyTypeDisplay}${protectedBadge}) ${securityBadge}</h3>
+                    <div class="key-header">
+                        <h3>${validator.sanitizeHTML(keyData.name)} (${keyTypeDisplay}${protectedBadge}) ${securityBadge}</h3>
+                    </div>
                     <div class="key-meta">Created: ${new Date(keyData.created).toLocaleString()}</div>
                     <div class="key-meta">Algorithm: ${keyData.algorithm || ''} ${keyData.length ? keyData.length + ' bits' : keyData.curve || ''}</div>
                     ${expiryInfo}
@@ -2307,7 +2423,7 @@
         }
 
         // File download functions
-        function downloadEncryptedFile() {function downloadEncryptedFile() {
+        function downloadEncryptedFile() {
             const encryptedOutput = document.getElementById('encryptedOutput').value;
             if (!encryptedOutput) {
                 showStatus('encryptStatus', 'No encrypted data to download', 'error');
@@ -2316,8 +2432,6 @@
             
             const filename = document.getElementById('downloadEncryptedBtn').getAttribute('data-filename') || generateRandomFileName(6) + '.lmn';
             
-            // Changed from 'text/plain' to 'application/octet-stream' to prevent
-            // browsers from appending '.txt' extension
             const blob = new Blob([encryptedOutput], { type: 'application/octet-stream' });
             downloadBlob(blob, filename);
             
@@ -2359,54 +2473,9 @@
         }
         
         // Key Import/Export Functions
-        async function importKey() {
-            try {
-                const importText = prompt("Paste the exported key data:");
-                if (!importText) return;
-                
-                setLoading(true);
-                
-                let keyData;
-                try {
-                    const jsonText = atob(importText.trim());
-                    keyData = JSON.parse(jsonText);
-                } catch (error) {
-                    throw new Error('Invalid key data format');
-                }
-                
-                // Validate the key data
-                if (!keyData.id || !keyData.name || !keyData.type || !keyData.created) {
-                    throw new Error('Missing required key properties');
-                }
-                
-                // Validate key name
-                if (!validator.isValidKeyName(keyData.name)) {
-                    throw new Error('Invalid key name format');
-                }
-                
-                // Check if a key with this ID already exists
-                const existingKeyIndex = keys.findIndex(k => k.id === keyData.id);
-                if (existingKeyIndex >= 0) {
-                    const overwrite = confirm(`A key with name "${keyData.name}" already exists. Overwrite?`);
-                    if (overwrite) {
-                        keys[existingKeyIndex] = keyData;
-                    } else {
-                        // Generate a new ID for the key
-                        keyData.id = crypto.randomUUID();
-                        keys.push(keyData);
-                    }
-                } else {
-                    keys.push(keyData);
-                }
-                
-                await saveKeys();
-                showStatus('keyStatus', `Key "${keyData.name}" imported successfully`, 'success');
-            } catch (error) {
-                console.error('Import error:', error);
-                showStatus('keyStatus', 'Import error: ' + error.message, 'error');
-            } finally {
-                setLoading(false);
-            }
+        function importKey() {
+            const keyFileInput = createKeyFileInput();
+            keyFileInput.click();
         }
         
         async function exportKey(keyId) {
@@ -2421,33 +2490,116 @@
                 const jsonText = JSON.stringify(keyData);
                 const exportText = btoa(jsonText);
                 
-                // Create a secure method to copy sensitive data
-                const success = await secureClipboardCopy(exportText);
+                // Create a download with .lim extension
+                const blob = new Blob([exportText], { type: 'application/octet-stream' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${keyData.name.replace(/[^a-z0-9]/gi, '_')}.lim`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
                 
-                if (success) {
-                    showStatus('keyStatus', `Key "${keyData.name}" copied to clipboard`, 'success');
-                    
-                    // If configured, schedule clipboard clearing
-                    if (appSettings.clearClipboard) {
-                        scheduleClipboardClear();
-                    }
-                } else {
-                    // Fallback method: Create a download
-                    const blob = new Blob([exportText], { type: 'text/plain' });
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = `Lemonade-key-${keyData.name.replace(/[^a-z0-9]/gi, '_')}.txt`;
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                    URL.revokeObjectURL(url);
-                    
-                    showStatus('keyStatus', `Key "${keyData.name}" saved as file`, 'success');
-                }
+                showStatus('keyStatus', `Key "${keyData.name}" exported as .lim file`, 'success');
             } catch (error) {
                 console.error('Export error:', error);
                 showStatus('keyStatus', 'Export error: ' + error.message, 'error');
+            }
+        }
+
+        function createKeyFileInput() {
+            // Check if it already exists
+            let keyFileInput = document.getElementById('keyFileInput');
+            
+            if (!keyFileInput) {
+                keyFileInput = document.createElement('input');
+                keyFileInput.type = 'file';
+                keyFileInput.id = 'keyFileInput';
+                keyFileInput.accept = '.lim';
+                keyFileInput.style.display = 'none';
+                document.body.appendChild(keyFileInput);
+                
+                // Add event listener
+                keyFileInput.addEventListener('change', handleKeyFileSelect);
+            }
+            
+            return keyFileInput;
+        }
+
+        async function handleKeyFileSelect(event) {
+            try {
+                const files = event.target.files;
+                if (!files || files.length === 0) return;
+                
+                setLoading(true);
+                const file = files[0];
+                
+                // Read the file content
+                const reader = new FileReader();
+                
+                reader.onload = async function(e) {
+                    try {
+                        const importText = e.target.result;
+                        let keyData;
+                        
+                        try {
+                            const jsonText = atob(importText);
+                            keyData = JSON.parse(jsonText);
+                        } catch (error) {
+                            throw new Error('Invalid key file format');
+                        }
+                        
+                        // Validate the key data
+                        if (!keyData.id || !keyData.name || !keyData.type || !keyData.created) {
+                            throw new Error('Missing required key properties');
+                        }
+                        
+                        // Validate key name
+                        if (!validator.isValidKeyName(keyData.name)) {
+                            throw new Error('Invalid key name format');
+                        }
+                        
+                        // Check if a key with this ID already exists
+                        const existingKeyIndex = keys.findIndex(k => k.id === keyData.id);
+                        if (existingKeyIndex >= 0) {
+                            const overwrite = confirm(`A key with name "${keyData.name}" already exists. Overwrite?`);
+                            if (overwrite) {
+                                keys[existingKeyIndex] = keyData;
+                            } else {
+                                // Generate a new ID for the key
+                                keyData.id = crypto.randomUUID();
+                                keys.push(keyData);
+                            }
+                        } else {
+                            keys.push(keyData);
+                        }
+                        
+                        await saveKeys();
+                        showStatus('keyStatus', `Key "${keyData.name}" imported successfully`, 'success');
+                    } catch (error) {
+                        console.error('Import error:', error);
+                        showStatus('keyStatus', 'Import error: ' + error.message, 'error');
+                    } finally {
+                        setLoading(false);
+                        // Reset the input so the same file can be selected again
+                        document.getElementById('keyFileInput').value = '';
+                    }
+                };
+                
+                reader.onerror = function() {
+                    setLoading(false);
+                    showStatus('keyStatus', 'Error reading the key file', 'error');
+                    document.getElementById('keyFileInput').value = '';
+                };
+                
+                reader.readAsText(file);
+                
+            } catch (error) {
+                console.error('Import error:', error);
+                showStatus('keyStatus', 'Import error: ' + error.message, 'error');
+                setLoading(false);
+                document.getElementById('keyFileInput').value = '';
             }
         }
         
@@ -2942,6 +3094,9 @@
             removeDecryptFile.addEventListener('click', () => {
                 clearDecryptFile();
             });
+
+            // Create the key file input element on page load
+            createKeyFileInput();
             
             // Download file event listeners
             downloadEncryptedBtn.addEventListener('click', downloadEncryptedFile);
