@@ -203,13 +203,13 @@ Lemonade can be installed as a Progressive Web App, allowing it to:
 - Launch from your device's home screen or app menu
 - Run in its own window without browser chrome
 
-To install:
+To install: (Must be Chromium-based browser or Safari for IOS)
 
 1. Navigate to the "Settings" tab
 2. Find the "Install App" section
 3. Click "Install Lemonade App" (button will be enabled when installation is available)
 
-Alternatively, most browsers provide an installation icon in the address bar or menu when a site can be installed as a PWA.
+Alternatively, Safari provides an installation icon in the address bar or menu when a site can be installed as a PWA.
 
 ### PWA Benefits
 
@@ -248,10 +248,9 @@ No. Lemonade uses strong encryption for password protection. If you forget a key
 ### Can I use Lemonade to encrypt emails?
 
 Lemonade doesn't integrate directly with email clients, but you can:
-1. Encrypt your message in Lemonade
+1. Encrypt your message in Lemonade with a securely shared symmetric key (.lim) or other user's public asymmetric key (.lim)
 2. Copy the encrypted text
 3. Paste it into your email
-4. Send your public key file (.lim) to new correspondents beforehand
 
 ### Is my data sent to any servers?
 
@@ -259,11 +258,11 @@ No. Lemonade operates entirely within your browser. No data is ever sent to remo
 
 ### How do I share an encrypted file with someone?
 
-1. Obtain their public key file (.lim)
-2. Import their public key in your Lemonade app
-3. Encrypt your file using their public key
+1. Obtain their public key file (.lim) or shared symmetric key file (.lim)
+2. Import the key in your Lemonade app
+3. Encrypt your file using their public key or shared symmetric key
 4. Send them the encrypted file (.lmn)
-5. They can decrypt it using their private key
+5. They can decrypt it using their private key or shared symmetric key
 
 ### What if I need to use Lemonade on multiple devices?
 
