@@ -42,19 +42,19 @@
         body.dark-mode {
             --bg-color: #000000;
             --text-color: #ffffff;
-            --title-gradient: linear-gradient(90deg, #FFFF00, #CCCC00);
-            --card-bg: #121212;
-            --accent-color: #FFFF00; /* Neon Yellow */
+            --title-gradient: linear-gradient(90deg, #FF00FF, #00FFFF, #FFFF00);
+            --card-bg: rgba(18, 18, 18, 0.7);
+            --accent-color: #FF00FF; /* Neon Pink */
             --border-color: #333333;
-            --input-bg: #1a1a1a;
+            --input-bg: rgba(26, 26, 26, 0.7);
             --button-bg: #00FFFF; /* Neon Teal */
             --button-text: #000000;
             --button-hover: #FF00FF; /* Neon Purple */
             --success-color: #39FF14; /* Neon Green */
             --error-color: #FF3131; /* Neon Red */
             --warning-color: #FFFF00; /* Neon Yellow */
-            --cyber-line: rgba(0, 255, 255, 0.2); /* Neon Teal */
-            --cyber-glow: rgba(255, 0, 255, 0.3); /* Neon Purple */
+            --cyber-line: rgba(0, 255, 255, 0.4); /* Brighter Neon Teal */
+            --cyber-glow: rgba(255, 0, 255, 0.6); /* Brighter Neon Purple */
             --security-high: #39FF14; /* Neon Green */
             --security-medium: #FFFF00; /* Neon Yellow */
             --security-low: #FF3131; /* Neon Red */
@@ -74,6 +74,234 @@
         
         body::before {
             display: none;
+        }
+
+        /* Psychedelic Background */
+        body.dark-mode::before {
+            content: "";
+            display: block;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: linear-gradient(
+                125deg,
+                #000000,
+                #220033,
+                #000033,
+                #330033,
+                #000022
+            );
+            background-size: 400% 400%;
+            animation: gradient-shift 15s ease infinite;
+            opacity: 0.9;
+        }
+
+        @keyframes gradient-shift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Add scanlines overlay */
+        body.dark-mode::after {
+            content: "";
+            display: block;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(0, 0, 0, 0.15),
+                rgba(0, 0, 0, 0.15) 1px,
+                transparent 1px,
+                transparent 2px
+            );
+            pointer-events: none;
+        }
+
+        /* Enhanced App Title */
+        body.dark-mode .app-title {
+            background: var(--title-gradient);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-shadow: 0 0 15px var(--cyber-glow);
+            animation: title-shift 5s ease infinite;
+        }
+
+        @keyframes title-shift {
+            0% { filter: hue-rotate(0deg); }
+            50% { filter: hue-rotate(90deg); }
+            100% { filter: hue-rotate(0deg); }
+        }
+
+        /* Enhanced Cards with Glowing Borders */
+        body.dark-mode .card {
+            border: 1px solid var(--accent-color);
+            box-shadow: 0 0 15px rgba(255, 0, 255, 0.5);
+            backdrop-filter: blur(5px);
+            animation: border-pulse 4s infinite;
+        }
+
+        @keyframes border-pulse {
+            0% { border-color: #FF00FF; box-shadow: 0 0 15px rgba(255, 0, 255, 0.5); }
+            33% { border-color: #00FFFF; box-shadow: 0 0 15px rgba(0, 255, 255, 0.5); }
+            66% { border-color: #FFFF00; box-shadow: 0 0 15px rgba(255, 255, 0, 0.5); }
+            100% { border-color: #FF00FF; box-shadow: 0 0 15px rgba(255, 0, 255, 0.5); }
+        }
+
+        /* Enhanced Buttons with Glow Effect */
+        body.dark-mode button {
+            border: 1px solid transparent;
+            box-shadow: 0 0 10px var(--cyber-glow);
+            text-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        body.dark-mode button:hover {
+            box-shadow: 0 0 20px var(--cyber-glow);
+            transform: translateY(-2px);
+        }
+
+        /* Psychedelic button effects */
+        body.dark-mode button::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: conic-gradient(
+                #FF00FF,
+                #00FFFF,
+                #FFFF00,
+                #FF00FF
+            );
+            animation: rotate 3s linear infinite;
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: -1;
+        }
+
+        body.dark-mode button:hover::before {
+            opacity: 0.3;
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* Enhanced Input Fields */
+        body.dark-mode input, 
+        body.dark-mode textarea, 
+        body.dark-mode select {
+            border: 1px solid var(--border-color);
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+            transition: all 0.3s ease;
+        }
+
+        body.dark-mode input:focus, 
+        body.dark-mode textarea:focus, 
+        body.dark-mode select:focus {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 15px var(--cyber-glow), inset 0 0 10px rgba(0, 0, 0, 0.5);
+            animation: focus-pulse 2s infinite;
+        }
+
+        @keyframes focus-pulse {
+            0% { border-color: #FF00FF; }
+            50% { border-color: #00FFFF; }
+            100% { border-color: #FF00FF; }
+        }
+
+        /* Enhanced Security Badges */
+        body.dark-mode .security-badge {
+            animation: security-pulse 2s infinite;
+            text-shadow: 0 0 5px currentColor;
+        }
+
+        @keyframes security-pulse {
+            0% { box-shadow: 0 0 5px currentColor; }
+            50% { box-shadow: 0 0 15px currentColor; }
+            100% { box-shadow: 0 0 5px currentColor; }
+        }
+
+        /* Enhanced Key Items */
+        body.dark-mode .key-item {
+            border: 1px solid var(--border-color);
+            background: linear-gradient(145deg, rgba(18, 18, 18, 0.7), rgba(26, 26, 26, 0.7));
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            transition: all 0.3s ease;
+        }
+
+        body.dark-mode .key-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 15px rgba(255, 0, 255, 0.3);
+        }
+
+        /* Tab Button Enhancement */
+        body.dark-mode .tab-btn.active {
+            background: linear-gradient(90deg, rgba(0, 0, 0, 0.5), rgba(255, 0, 255, 0.1), rgba(0, 0, 0, 0.5));
+            box-shadow: 0 0 10px rgba(255, 0, 255, 0.3);
+            animation: tab-shift 3s infinite;
+        }
+
+        @keyframes tab-shift {
+            0% { border-color: #FF00FF; }
+            33% { border-color: #00FFFF; }
+            66% { border-color: #FFFF00; }
+            100% { border-color: #FF00FF; }
+        }
+
+        /* Switch slider enhancement */
+        body.dark-mode .slider {
+            background: linear-gradient(90deg, #220033, #000033);
+            box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.5);
+        }
+
+        body.dark-mode input:checked + .slider {
+            background: linear-gradient(90deg, #00FFFF, #FF00FF);
+        }
+
+        body.dark-mode .slider:before {
+            box-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+        }
+
+        /* Status enhancement */
+        body.dark-mode .status.success,
+        body.dark-mode .status.warning,
+        body.dark-mode .status.error {
+            animation: status-pulse 2s infinite;
+        }
+
+        @keyframes status-pulse {
+            0% { box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.3); }
+            50% { box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5); }
+            100% { box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.3); }
+        }
+
+        /* Loading animation enhancement */
+        body.dark-mode .spinner {
+            border: 5px solid rgba(0, 0, 0, 0.3);
+            border-top-color: var(--accent-color);
+            animation: spin 1s ease-in-out infinite, color-shift 3s linear infinite;
+        }
+
+        @keyframes color-shift {
+            0% { border-top-color: #FF00FF; }
+            33% { border-top-color: #00FFFF; }
+            66% { border-top-color: #FFFF00; }
+            100% { border-top-color: #FF00FF; }
         }
         
         .container {
