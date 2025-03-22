@@ -2334,7 +2334,6 @@
             document.getElementById('decryptionPasswordGroup').style.display = keyData.protected ? 'block' : 'none';
         }
         
-        // Encryption/Decryption Functions
         async function encryptMessage() {
             try {
                 let messageBuffer;
@@ -2386,18 +2385,8 @@
                     actualKeyData = safeMemory.retrieve(decryptedKeyRef);
                 }
                 
-                // Encrypt based on key type
-                let encryptionResult;
-                
-                if (keyData.type === 'aes') {
-                    encryptionResult = await encryptWithAES(messageBuffer, actualKeyData);
-                } else if (keyData.type === 'rsa' || keyData.type === 'rsa-4096') {
-                    encryptionResult = await encryptWithRSA(messageBuffer, actualKeyData);
-                } else if (keyData.type === 'ecc' || keyData.type === 'ecc-p384') {
-                    encryptionResult = await encryptWithECC(messageBuffer, actualKeyData);
-                } else {
-                    throw new Error('Unsupported key type');
-                }
+                // Encrypt using the enhanced functions
+                let encryptionResult = await encryptData(messageBuffer, actualKeyData);
                 
                 // Clean up sensitive data if we decrypted a protected key
                 if (decryptedKeyRef) {
@@ -2406,17 +2395,16 @@
                 
                 // Add file information if encrypting a file
                 if (encryptFileData) {
+                    // Store file info in the metadata
+                    // This is handled differently in V2 format, so we just pass it along
+                    // for legacy compatibility
                     encryptionResult.fileName = encryptFileName;
                     encryptionResult.fileSize = encryptFileData.byteLength;
                     encryptionResult.isFile = true;
                 }
                 
-                // Encode the encryption info as a JSON string and then as base64
-                const encryptionInfoStr = JSON.stringify(encryptionResult);
-                const encodedEncryptionInfo = btoa(encryptionInfoStr);
-                
-                // Add a header to indicate this is a Lemonade encrypted message
-                const encryptedOutput = `--LM--\n${encodedEncryptionInfo}\n--EM--`;
+                // Create the final formatted message
+                const encryptedOutput = createEncryptedMessageString(encryptionResult);
                 
                 document.getElementById('encryptedOutput').value = encryptedOutput;
                 
@@ -2435,59 +2423,211 @@
         }
         
         async function encryptWithAES(messageBuffer, keyData) {
-            // Generate a random IV
-            const iv = window.crypto.getRandomValues(new Uint8Array(AES_CONFIG.IV_LENGTH));
-            
-            // Import the key for use with SubtleCrypto
-            let cryptoKey;
-            if (keyData._cryptoKey) {
-                cryptoKey = keyData._cryptoKey;
-            } else {
-                const keyBuffer = base64ToArrayBuffer(keyData.key);
-                cryptoKey = await importAESKey(keyBuffer);
+            try {
+                // 1. Generate a random IV for message encryption
+                const iv = window.crypto.getRandomValues(new Uint8Array(AES_CONFIG.IV_LENGTH));
+                
+                // 2. Import the encryption key
+                let cryptoKey;
+                if (keyData._cryptoKey) {
+                    cryptoKey = keyData._cryptoKey;
+                } else {
+                    const keyBuffer = base64ToArrayBuffer(keyData.key);
+                    cryptoKey = await window.crypto.subtle.importKey(
+                        'raw',
+                        keyBuffer,
+                        { 
+                            name: AES_CONFIG.MODE,
+                            length: AES_CONFIG.KEY_LENGTH
+                        },
+                        false,
+                        ['encrypt']
+                    );
+                }
+                
+                // 3. Encrypt the actual message with AES-GCM
+                const encryptedData = await window.crypto.subtle.encrypt(
+                    {
+                        name: AES_CONFIG.MODE,
+                        iv: iv,
+                        tagLength: AES_CONFIG.TAG_LENGTH
+                    },
+                    cryptoKey,
+                    messageBuffer
+                );
+                
+                // 4. Create metadata object
+                const metadata = {
+                    k: keyData.id,      // keyId
+                    t: new Date().toISOString(), // timestamp
+                    a: AES_CONFIG.MODE,  // algorithm
+                };
+
+                // Add file metadata if we're encrypting a file
+                if (encryptFileData && encryptFileName) {
+                    metadata.f = {
+                        n: encryptFileName,   // filename
+                        s: encryptFileData.byteLength  // file size
+                    };
+                }
+                
+                // 5. Convert metadata to buffer
+                const metadataBuffer = new TextEncoder().encode(JSON.stringify(metadata));
+                
+                // 6. Generate a random IV for metadata encryption
+                const metadataIv = window.crypto.getRandomValues(new Uint8Array(AES_CONFIG.IV_LENGTH));
+                
+                // 7. Generate a separate key for metadata encryption
+                const metadataKey = await window.crypto.subtle.generateKey(
+                    {
+                        name: AES_CONFIG.MODE,
+                        length: AES_CONFIG.KEY_LENGTH
+                    },
+                    true, // extractable
+                    ['encrypt']
+                );
+                
+                // 8. Encrypt the metadata
+                const encryptedMetadata = await window.crypto.subtle.encrypt(
+                    {
+                        name: AES_CONFIG.MODE,
+                        iv: metadataIv,
+                        tagLength: AES_CONFIG.TAG_LENGTH
+                    },
+                    metadataKey,
+                    metadataBuffer
+                );
+                
+                // 9. Export the metadata key
+                const exportedMetadataKey = await window.crypto.subtle.exportKey('raw', metadataKey);
+                
+                // 10. Construct the buffer with a simplified structure:
+                // [struct_version(1B)][metadataIv(12B)][metadataKeyLen(4B)][metadataKey][metadataLen(4B)][metadata][messageIv(12B)][messageLen(4B)][message]
+                
+                // Version identifier - makes future updates easier
+                const structVersion = 3; // New format version
+                
+                // Calculate buffer size
+                const totalSize = 1 + // struct version
+                                metadataIv.byteLength +
+                                4 + // metadata key length
+                                exportedMetadataKey.byteLength +
+                                4 + // encrypted metadata length
+                                encryptedMetadata.byteLength +
+                                iv.byteLength +
+                                4 + // message length
+                                encryptedData.byteLength;
+                
+                // Create the buffer
+                const result = new Uint8Array(totalSize);
+                let offset = 0;
+                
+                // Add struct version
+                result[offset++] = structVersion;
+                
+                // Add metadata IV
+                result.set(metadataIv, offset);
+                offset += metadataIv.byteLength;
+                
+                // Add metadata key length (4 bytes, big-endian)
+                const metadataKeyLength = exportedMetadataKey.byteLength;
+                result[offset++] = (metadataKeyLength >> 24) & 0xFF;
+                result[offset++] = (metadataKeyLength >> 16) & 0xFF;
+                result[offset++] = (metadataKeyLength >> 8) & 0xFF;
+                result[offset++] = metadataKeyLength & 0xFF;
+                
+                // Add metadata key
+                result.set(new Uint8Array(exportedMetadataKey), offset);
+                offset += exportedMetadataKey.byteLength;
+                
+                // Add encrypted metadata length (4 bytes, big-endian)
+                const metadataLength = encryptedMetadata.byteLength;
+                result[offset++] = (metadataLength >> 24) & 0xFF;
+                result[offset++] = (metadataLength >> 16) & 0xFF;
+                result[offset++] = (metadataLength >> 8) & 0xFF;
+                result[offset++] = metadataLength & 0xFF;
+                
+                // Add encrypted metadata
+                result.set(new Uint8Array(encryptedMetadata), offset);
+                offset += encryptedMetadata.byteLength;
+                
+                // Add message IV
+                result.set(iv, offset);
+                offset += iv.byteLength;
+                
+                // Add encrypted message length (4 bytes, big-endian)
+                const messageLength = encryptedData.byteLength;
+                result[offset++] = (messageLength >> 24) & 0xFF;
+                result[offset++] = (messageLength >> 16) & 0xFF;
+                result[offset++] = (messageLength >> 8) & 0xFF;
+                result[offset++] = messageLength & 0xFF;
+                
+                // Add encrypted message
+                result.set(new Uint8Array(encryptedData), offset);
+                
+                // Return the result
+                return {
+                    version: 3, // Updated version indicator
+                    data: arrayBufferToBase64(result.buffer)
+                };
+            } catch (error) {
+                console.error('AES encryption error:', error);
+                throw new Error('Encryption failed: ' + error.message);
             }
+        }
+
+        // Helper function to derive a key for metadata encryption
+        async function deriveMetadataKey(baseKey, iv) {
+            // Export the base key
+            const rawKey = await window.crypto.subtle.exportKey('raw', baseKey);
             
-            // Encrypt with AES-GCM
-            const encryptedData = await window.crypto.subtle.encrypt(
-                {
-                    name: AES_CONFIG.MODE,
-                    iv: iv,
-                    tagLength: AES_CONFIG.TAG_LENGTH
-                },
-                cryptoKey,
-                messageBuffer
+            // Create a key derivation context using the IV
+            const context = new Uint8Array(rawKey.byteLength + iv.byteLength);
+            context.set(new Uint8Array(rawKey), 0);
+            context.set(iv, rawKey.byteLength);
+            
+            // Import as base for derivation
+            const baseKeyMaterial = await window.crypto.subtle.importKey(
+                'raw',
+                context,
+                { name: 'HKDF' },
+                false,
+                ['deriveKey']
             );
             
-            // Create encryption info object
-            return {
-                algorithm: AES_CONFIG.MODE,
-                keyId: keyData.id,
-                iv: arrayBufferToBase64(iv),
-                data: arrayBufferToBase64(encryptedData),
-                timestamp: new Date().toISOString()
-            };
+            // Derive a new key using HKDF
+            return window.crypto.subtle.deriveKey(
+                {
+                    name: 'HKDF',
+                    hash: 'SHA-256',
+                    salt: iv,
+                    info: new Uint8Array([0x01, 0x02, 0x03, 0x04]) // Fixed info
+                },
+                baseKeyMaterial,
+                {
+                    name: AES_CONFIG.MODE,
+                    length: AES_CONFIG.KEY_LENGTH
+                },
+                false,
+                ['encrypt', 'decrypt']
+            );
         }
         
         async function encryptWithRSA(messageBuffer, keyData) {
-            // For RSA, use a hybrid approach:
-            // 1. Generate a random AES key
-            // 2. Encrypt the message with the AES key
-            // 3. Encrypt the AES key with the RSA public key
-            
-            // Generate a random IV
-            const iv = window.crypto.getRandomValues(new Uint8Array(AES_CONFIG.IV_LENGTH));
-            
-            // Generate a random AES key
+            // 1. Generate a random AES key for hybrid encryption
             const aesKey = await window.crypto.subtle.generateKey(
                 {
                     name: AES_CONFIG.MODE,
                     length: AES_CONFIG.KEY_LENGTH
                 },
-                true,
+                true, // Ensure this is extractable
                 ['encrypt', 'decrypt']
             );
             
-            // Encrypt the message with AES
+            // 2. Generate a random IV for AES encryption
+            const iv = window.crypto.getRandomValues(new Uint8Array(AES_CONFIG.IV_LENGTH));
+            
+            // 3. Encrypt the message with AES
             const encryptedMessage = await window.crypto.subtle.encrypt(
                 {
                     name: AES_CONFIG.MODE,
@@ -2498,10 +2638,10 @@
                 messageBuffer
             );
             
-            // Export the AES key
+            // 4. Export the AES key to raw format
             const exportedAesKey = await window.crypto.subtle.exportKey('raw', aesKey);
             
-            // Import the RSA public key
+            // 5. Import the RSA public key
             let rsaPublicKey;
             if (keyData._publicKey) {
                 rsaPublicKey = keyData._publicKey;
@@ -2510,7 +2650,7 @@
                 rsaPublicKey = await importRSAPublicKey(publicKeyBuffer, keyData.length || RSA_CONFIG.KEY_SIZE);
             }
             
-            // Encrypt the AES key with RSA
+            // 6. Encrypt the AES key with RSA
             const encryptedAesKey = await window.crypto.subtle.encrypt(
                 {
                     name: RSA_CONFIG.ALGORITHM
@@ -2519,44 +2659,161 @@
                 exportedAesKey
             );
             
-            // Create encryption info object
+            // 7. Create metadata
+            const metadata = {
+                a: RSA_CONFIG.ALGORITHM + '+' + AES_CONFIG.MODE, // algorithm
+                k: keyData.id, // keyId
+                t: new Date().toISOString(), // timestamp
+                s: keyData.length || RSA_CONFIG.KEY_SIZE // key size
+            };
+
+            // Add file metadata if we're encrypting a file
+            if (encryptFileData && encryptFileName) {
+                metadata.f = {
+                    n: encryptFileName,   // filename
+                    s: encryptFileData.byteLength  // file size
+                };
+            }
+            
+            // 8. Convert metadata to buffer
+            const metadataBuffer = new TextEncoder().encode(JSON.stringify(metadata));
+            
+            // 9. Generate a separate key for metadata encryption
+            const metadataEncryptionKey = await window.crypto.subtle.generateKey(
+                {
+                    name: AES_CONFIG.MODE,
+                    length: AES_CONFIG.KEY_LENGTH
+                },
+                true, // Ensure this one is extractable
+                ['encrypt', 'decrypt']
+            );
+            
+            // 10. Generate a separate IV for metadata encryption
+            const metadataIv = window.crypto.getRandomValues(new Uint8Array(AES_CONFIG.IV_LENGTH));
+            
+            // 11. Encrypt the metadata
+            const encryptedMetadata = await window.crypto.subtle.encrypt(
+                {
+                    name: AES_CONFIG.MODE,
+                    iv: metadataIv,
+                    tagLength: AES_CONFIG.TAG_LENGTH
+                },
+                metadataEncryptionKey,
+                metadataBuffer
+            );
+            
+            // 12. Export the metadata encryption key
+            const exportedMetadataKey = await window.crypto.subtle.exportKey('raw', metadataEncryptionKey);
+            
+            // 13. Add random padding (between 1-64 bytes)
+            const paddingLength = Math.floor(Math.random() * 64) + 1;
+            const padding = window.crypto.getRandomValues(new Uint8Array(paddingLength));
+            
+            // 14. Combine everything into a single binary package
+            const result = new Uint8Array(
+                1 + // metadata IV length indicator
+                metadataIv.byteLength +
+                4 + // metadata key length (4 bytes)
+                exportedMetadataKey.byteLength +
+                4 + // encrypted metadata length (4 bytes)
+                encryptedMetadata.byteLength +
+                4 + // RSA encrypted key length (4 bytes)
+                encryptedAesKey.byteLength +
+                iv.byteLength +
+                4 + // encrypted message length (4 bytes)
+                encryptedMessage.byteLength +
+                1 + // padding length indicator
+                padding.byteLength
+            );
+            
+            let offset = 0;
+            
+            // Add metadata IV length
+            result[offset++] = metadataIv.byteLength;
+            
+            // Add metadata IV
+            result.set(metadataIv, offset);
+            offset += metadataIv.byteLength;
+            
+            // Add metadata key length (4 bytes, big-endian)
+            const metadataKeyLength = exportedMetadataKey.byteLength;
+            result[offset++] = (metadataKeyLength >> 24) & 0xFF;
+            result[offset++] = (metadataKeyLength >> 16) & 0xFF;
+            result[offset++] = (metadataKeyLength >> 8) & 0xFF;
+            result[offset++] = metadataKeyLength & 0xFF;
+            
+            // Add metadata key
+            result.set(new Uint8Array(exportedMetadataKey), offset);
+            offset += exportedMetadataKey.byteLength;
+            
+            // Add encrypted metadata length (4 bytes, big-endian)
+            const metadataLength = encryptedMetadata.byteLength;
+            result[offset++] = (metadataLength >> 24) & 0xFF;
+            result[offset++] = (metadataLength >> 16) & 0xFF;
+            result[offset++] = (metadataLength >> 8) & 0xFF;
+            result[offset++] = metadataLength & 0xFF;
+            
+            // Add encrypted metadata
+            result.set(new Uint8Array(encryptedMetadata), offset);
+            offset += encryptedMetadata.byteLength;
+            
+            // Add RSA encrypted key length (4 bytes, big-endian)
+            const encryptedKeyLength = encryptedAesKey.byteLength;
+            result[offset++] = (encryptedKeyLength >> 24) & 0xFF;
+            result[offset++] = (encryptedKeyLength >> 16) & 0xFF;
+            result[offset++] = (encryptedKeyLength >> 8) & 0xFF;
+            result[offset++] = encryptedKeyLength & 0xFF;
+            
+            // Add RSA encrypted key
+            result.set(new Uint8Array(encryptedAesKey), offset);
+            offset += encryptedAesKey.byteLength;
+            
+            // Add AES IV
+            result.set(iv, offset);
+            offset += iv.byteLength;
+            
+            // Add encrypted message length (4 bytes, big-endian)
+            const messageLength = encryptedMessage.byteLength;
+            result[offset++] = (messageLength >> 24) & 0xFF;
+            result[offset++] = (messageLength >> 16) & 0xFF;
+            result[offset++] = (messageLength >> 8) & 0xFF;
+            result[offset++] = messageLength & 0xFF;
+            
+            // Add encrypted message
+            result.set(new Uint8Array(encryptedMessage), offset);
+            offset += encryptedMessage.byteLength;
+            
+            // Add padding length
+            result[offset++] = padding.byteLength;
+            
+            // Add padding
+            result.set(padding, offset);
+            
+            // Return encrypted data with version marker
             return {
-                algorithm: RSA_CONFIG.ALGORITHM + '+' + AES_CONFIG.MODE,
-                keyId: keyData.id,
-                iv: arrayBufferToBase64(iv),
-                encryptedKey: arrayBufferToBase64(encryptedAesKey),
-                data: arrayBufferToBase64(encryptedMessage),
-                timestamp: new Date().toISOString(),
-                keySize: keyData.length || RSA_CONFIG.KEY_SIZE
+                version: 2,
+                data: arrayBufferToBase64(result.buffer)
             };
         }
         
         async function encryptWithECC(messageBuffer, keyData) {
-            // For ECC, use a hybrid approach:
-            // 1. Generate ephemeral ECC key pair
-            // 2. Perform ECDH key derivation
-            // 3. Use derived key for AES encryption
-            
-            // Generate a random IV
-            const iv = window.crypto.getRandomValues(new Uint8Array(AES_CONFIG.IV_LENGTH));
-            
-            // Generate an ephemeral ECC key pair
+            // 1. Generate an ephemeral ECC key pair
             const ephemeralKeyPair = await window.crypto.subtle.generateKey(
                 {
                     name: 'ECDH',
                     namedCurve: keyData.curve || ECC_CONFIG.CURVE
                 },
-                true,
+                true, // Make sure it's extractable
                 ['deriveKey', 'deriveBits']
             );
             
-            // Export the ephemeral public key to send with the message
+            // 2. Export the ephemeral public key to send with the message
             const ephemeralPublicKey = await window.crypto.subtle.exportKey(
                 'spki',
                 ephemeralKeyPair.publicKey
             );
             
-            // Import the recipient's public key
+            // 3. Import the recipient's public key
             let recipientPublicKey;
             if (keyData._publicKey) {
                 recipientPublicKey = keyData._publicKey;
@@ -2568,13 +2825,23 @@
                 );
             }
             
-            // Derive a shared secret using ECDH
-            const derivedKey = await window.crypto.subtle.deriveKey(
+            // 4. Generate a random IV for AES encryption
+            const iv = window.crypto.getRandomValues(new Uint8Array(AES_CONFIG.IV_LENGTH));
+            
+            // 5. Derive a shared secret using ECDH
+            const sharedSecretBits = await window.crypto.subtle.deriveBits(
                 {
                     name: 'ECDH',
                     public: recipientPublicKey
                 },
                 ephemeralKeyPair.privateKey,
+                256 // 256 bits for AES-256
+            );
+            
+            // 6. Convert shared secret to a key
+            const derivedKey = await window.crypto.subtle.importKey(
+                'raw',
+                sharedSecretBits,
                 {
                     name: AES_CONFIG.MODE,
                     length: AES_CONFIG.KEY_LENGTH
@@ -2583,7 +2850,7 @@
                 ['encrypt']
             );
             
-            // Encrypt the message with the derived key
+            // 7. Encrypt the message with the derived key
             const encryptedMessage = await window.crypto.subtle.encrypt(
                 {
                     name: AES_CONFIG.MODE,
@@ -2594,57 +2861,167 @@
                 messageBuffer
             );
             
-            // Create encryption info object
+            // 8. Create metadata
+            const metadata = {
+                a: 'ECDH+' + AES_CONFIG.MODE, // algorithm
+                k: keyData.id, // keyId
+                t: new Date().toISOString(), // timestamp
+                c: keyData.curve || ECC_CONFIG.CURVE // curve name
+            };
+
+            // Add file metadata if we're encrypting a file
+            if (encryptFileData && encryptFileName) {
+                metadata.f = {
+                    n: encryptFileName,   // filename
+                    s: encryptFileData.byteLength  // file size
+                };
+            }
+            
+            // 9. Convert metadata to buffer
+            const metadataBuffer = new TextEncoder().encode(JSON.stringify(metadata));
+            
+            // 10. Generate a separate key for metadata encryption
+            const metadataEncryptionKey = await window.crypto.subtle.generateKey(
+                {
+                    name: AES_CONFIG.MODE,
+                    length: AES_CONFIG.KEY_LENGTH
+                },
+                true, // Ensure this one is extractable
+                ['encrypt', 'decrypt']
+            );
+            
+            // 11. Generate a separate IV for metadata encryption
+            const metadataIv = window.crypto.getRandomValues(new Uint8Array(AES_CONFIG.IV_LENGTH));
+            
+            // 12. Encrypt the metadata
+            const encryptedMetadata = await window.crypto.subtle.encrypt(
+                {
+                    name: AES_CONFIG.MODE,
+                    iv: metadataIv,
+                    tagLength: AES_CONFIG.TAG_LENGTH
+                },
+                metadataEncryptionKey,
+                metadataBuffer
+            );
+            
+            // 13. Export the metadata encryption key
+            const exportedMetadataKey = await window.crypto.subtle.exportKey('raw', metadataEncryptionKey);
+            
+            // 14. Add random padding (between 1-64 bytes)
+            const paddingLength = Math.floor(Math.random() * 64) + 1;
+            const padding = window.crypto.getRandomValues(new Uint8Array(paddingLength));
+            
+            // 15. Combine everything into a single binary package
+            const result = new Uint8Array(
+                1 + // metadata IV length indicator
+                metadataIv.byteLength +
+                4 + // metadata key length (4 bytes)
+                exportedMetadataKey.byteLength +
+                4 + // encrypted metadata length (4 bytes)
+                encryptedMetadata.byteLength +
+                4 + // ephemeral public key length (4 bytes)
+                ephemeralPublicKey.byteLength +
+                iv.byteLength +
+                4 + // encrypted message length (4 bytes)
+                encryptedMessage.byteLength +
+                1 + // padding length indicator
+                padding.byteLength
+            );
+            
+            let offset = 0;
+            
+            // Add metadata IV length
+            result[offset++] = metadataIv.byteLength;
+            
+            // Add metadata IV
+            result.set(metadataIv, offset);
+            offset += metadataIv.byteLength;
+            
+            // Add metadata key length (4 bytes, big-endian)
+            const metadataKeyLength = exportedMetadataKey.byteLength;
+            result[offset++] = (metadataKeyLength >> 24) & 0xFF;
+            result[offset++] = (metadataKeyLength >> 16) & 0xFF;
+            result[offset++] = (metadataKeyLength >> 8) & 0xFF;
+            result[offset++] = metadataKeyLength & 0xFF;
+            
+            // Add metadata key
+            result.set(new Uint8Array(exportedMetadataKey), offset);
+            offset += exportedMetadataKey.byteLength;
+            
+            // Add encrypted metadata length (4 bytes, big-endian)
+            const metadataLength = encryptedMetadata.byteLength;
+            result[offset++] = (metadataLength >> 24) & 0xFF;
+            result[offset++] = (metadataLength >> 16) & 0xFF;
+            result[offset++] = (metadataLength >> 8) & 0xFF;
+            result[offset++] = metadataLength & 0xFF;
+            
+            // Add encrypted metadata
+            result.set(new Uint8Array(encryptedMetadata), offset);
+            offset += encryptedMetadata.byteLength;
+            
+            // Add ephemeral public key length (4 bytes, big-endian)
+            const ephemeralKeyLength = ephemeralPublicKey.byteLength;
+            result[offset++] = (ephemeralKeyLength >> 24) & 0xFF;
+            result[offset++] = (ephemeralKeyLength >> 16) & 0xFF;
+            result[offset++] = (ephemeralKeyLength >> 8) & 0xFF;
+            result[offset++] = ephemeralKeyLength & 0xFF;
+            
+            // Add ephemeral public key
+            result.set(new Uint8Array(ephemeralPublicKey), offset);
+            offset += ephemeralPublicKey.byteLength;
+            
+            // Add AES IV
+            result.set(iv, offset);
+            offset += iv.byteLength;
+            
+            // Add encrypted message length (4 bytes, big-endian)
+            const messageLength = encryptedMessage.byteLength;
+            result[offset++] = (messageLength >> 24) & 0xFF;
+            result[offset++] = (messageLength >> 16) & 0xFF;
+            result[offset++] = (messageLength >> 8) & 0xFF;
+            result[offset++] = messageLength & 0xFF;
+            
+            // Add encrypted message
+            result.set(new Uint8Array(encryptedMessage), offset);
+            offset += encryptedMessage.byteLength;
+            
+            // Add padding length
+            result[offset++] = padding.byteLength;
+            
+            // Add padding
+            result.set(padding, offset);
+            
+            // Return encrypted data with version marker
             return {
-                algorithm: 'ECDH+' + AES_CONFIG.MODE,
-                keyId: keyData.id,
-                iv: arrayBufferToBase64(iv),
-                ephemeralPublicKey: arrayBufferToBase64(ephemeralPublicKey),
-                data: arrayBufferToBase64(encryptedMessage),
-                timestamp: new Date().toISOString(),
-                curve: keyData.curve || ECC_CONFIG.CURVE
+                version: 2,
+                data: arrayBufferToBase64(result.buffer)
             };
         }
         
         async function decryptMessage() {
             try {
-                let encryptedData;
                 let encryptionInfo;
                 
-                if (decryptFileData && !document.getElementById('encryptedMessage').value.includes('--LM--')) {
-                    // Binary file decryption - not yet supported
-                    showStatus('decryptStatus', 'Raw binary file decryption is not supported. File must be in Lemonade encrypted format.', 'error');
+                // Text decryption
+                const encryptedMessage = document.getElementById('encryptedMessage').value;
+                
+                if (!encryptedMessage) {
+                    showStatus('decryptStatus', 'Please enter an encrypted message or add an encrypted file', 'error');
                     return;
-                } else {
-                    // Text decryption
-                    const encryptedMessage = document.getElementById('encryptedMessage').value;
-                    
-                    if (!encryptedMessage) {
-                        showStatus('decryptStatus', 'Please enter an encrypted message or add an encrypted file', 'error');
-                        return;
-                    }
-                    
-                    // Validate the encrypted message format
-                    if (!validator.isValidEncryptedMessage(encryptedMessage)) {
-                        showStatus('decryptStatus', 'Invalid encrypted message format', 'error');
-                        return;
-                    }
-                    
-                    // Parse the encrypted message
-                    const messageMatch = encryptedMessage.match(/--LM--([\s\S]+?)--EM--/);
-                    if (!messageMatch || !messageMatch[1]) {
-                        showStatus('decryptStatus', 'Invalid encrypted message format', 'error');
-                        return;
-                    }
-                    
-                    const encodedEncryptionInfo = messageMatch[1].trim();
-                    
-                    try {
-                        encryptionInfo = JSON.parse(atob(encodedEncryptionInfo));
-                    } catch (error) {
-                        showStatus('decryptStatus', 'Invalid encrypted message data', 'error');
-                        return;
-                    }
+                }
+                
+                // Validate the encrypted message format using the updated validator
+                if (!isValidEncryptedMessage(encryptedMessage)) {
+                    showStatus('decryptStatus', 'Invalid encrypted message format', 'error');
+                    return;
+                }
+                
+                // Parse the encrypted message using the new unified parser
+                try {
+                    encryptionInfo = parseEncryptedMessage(encryptedMessage);
+                } catch (error) {
+                    showStatus('decryptStatus', 'Invalid encrypted message data: ' + error.message, 'error');
+                    return;
                 }
                 
                 const keyId = document.getElementById('decryptionKey').value;
@@ -2657,11 +3034,8 @@
                 
                 setLoading(true);
                 
-                // Check if the message was encrypted with the selected key
-                if (encryptionInfo.keyId !== keyId) {
-                    showStatus('decryptStatus', 'This message was not encrypted with the selected key', 'error');
-                    return;
-                }
+                // For V2 format, we need to decrypt the metadata first to check the key ID
+                // This is handled inside the decrypt functions
                 
                 // Find the selected key
                 const keyData = keys.find(k => k.id === keyId);
@@ -2684,17 +3058,20 @@
                     actualKeyData = safeMemory.retrieve(decryptedKeyRef);
                 }
                 
-                // Decrypt based on algorithm
+                // Decrypt using the enhanced functions
+                let decryptResult = await decryptData(encryptionInfo, actualKeyData);
                 let decryptedData;
-                
-                if (encryptionInfo.algorithm === AES_CONFIG.MODE) {
-                    decryptedData = await decryptWithAES(encryptionInfo, actualKeyData);
-                } else if (encryptionInfo.algorithm === RSA_CONFIG.ALGORITHM + '+' + AES_CONFIG.MODE) {
-                    decryptedData = await decryptWithRSA(encryptionInfo, actualKeyData);
-                } else if (encryptionInfo.algorithm === 'ECDH+' + AES_CONFIG.MODE) {
-                    decryptedData = await decryptWithECC(encryptionInfo, actualKeyData);
+                let metadata;
+
+                // Handle both old and new return formats
+                if (decryptResult.data) {
+                    // New format with metadata
+                    decryptedData = decryptResult.data;
+                    metadata = decryptResult.metadata;
                 } else {
-                    throw new Error('Unsupported encryption algorithm: ' + encryptionInfo.algorithm);
+                    // Old format (just data)
+                    decryptedData = decryptResult;
+                    metadata = null;
                 }
                 
                 // Clean up sensitive data if we decrypted a protected key
@@ -2703,10 +3080,27 @@
                 }
                 
                 // Check if it's a file or text
-                if (encryptionInfo.isFile && encryptionInfo.fileName) {
+                let isFile = false;
+                let fileName = null;
+                let fileSize = null;
+                
+                // V1 format has explicit file markers
+                if (!encryptionInfo.version && encryptionInfo.isFile && encryptionInfo.fileName) {
+                    isFile = true;
+                    fileName = encryptionInfo.fileName;
+                    fileSize = encryptionInfo.fileSize || decryptedData.byteLength;
+                } 
+                // For V2/V3 formats, check metadata
+                else if (metadata && metadata.f) {
+                    isFile = true;
+                    fileName = metadata.f.n;
+                    fileSize = metadata.f.s || decryptedData.byteLength;
+                }
+                
+                if (isFile) {
                     // It's a file - store the decrypted data and file name
-                    document.getElementById('decryptedOutput').value = `File: ${encryptionInfo.fileName} (${formatFileSize(encryptionInfo.fileSize || decryptedData.byteLength)})`;
-                    document.getElementById('downloadDecryptedBtn').setAttribute('data-filename', encryptionInfo.fileName);
+                    document.getElementById('decryptedOutput').value = `File: ${fileName} (${formatFileSize(fileSize)})`;
+                    document.getElementById('downloadDecryptedBtn').setAttribute('data-filename', fileName);
                     document.getElementById('downloadDecryptedBtn').setAttribute('data-binary', 'true');
                     // Store the binary data for download
                     window.decryptedBinaryData = decryptedData;
@@ -2731,131 +3125,574 @@
         }
         
         async function decryptWithAES(encryptionInfo, keyData) {
-            // Get the encrypted data and IV
-            const encryptedData = base64ToArrayBuffer(encryptionInfo.data);
-            const iv = base64ToArrayBuffer(encryptionInfo.iv);
-            
-            // Import the key for use with SubtleCrypto
-            let cryptoKey;
-            if (keyData._cryptoKey) {
-                cryptoKey = keyData._cryptoKey;
-            } else {
-                const keyBuffer = base64ToArrayBuffer(keyData.key);
-                cryptoKey = await importAESKey(keyBuffer);
+            try {
+                // Get data buffer
+                const fullBuffer = base64ToArrayBuffer(encryptionInfo.data);
+                const fullData = new Uint8Array(fullBuffer);
+                
+                // Parse buffer
+                let offset = 0;
+                
+                // Check structure version (1 byte)
+                const structVersion = fullData[offset++];
+                
+                // We expect version 3
+                if (structVersion !== 3) {
+                    throw new Error('Unsupported data format version');
+                }
+                
+                // Read metadata IV (12 bytes)
+                const metadataIv = fullData.slice(offset, offset + AES_CONFIG.IV_LENGTH);
+                offset += AES_CONFIG.IV_LENGTH;
+                
+                // Read metadata key length (4 bytes)
+                const metadataKeyLength = (fullData[offset] << 24) | 
+                                        (fullData[offset + 1] << 16) | 
+                                        (fullData[offset + 2] << 8) | 
+                                        fullData[offset + 3];
+                offset += 4;
+                
+                // Read metadata key
+                const metadataKeyData = fullData.slice(offset, offset + metadataKeyLength);
+                offset += metadataKeyLength;
+                
+                // Read encrypted metadata length (4 bytes)
+                const metadataLength = (fullData[offset] << 24) | 
+                                    (fullData[offset + 1] << 16) | 
+                                    (fullData[offset + 2] << 8) | 
+                                    fullData[offset + 3];
+                offset += 4;
+                
+                // Read encrypted metadata
+                const encryptedMetadata = fullData.slice(offset, offset + metadataLength);
+                offset += metadataLength;
+                
+                // Read message IV (12 bytes)
+                const messageIv = fullData.slice(offset, offset + AES_CONFIG.IV_LENGTH);
+                offset += AES_CONFIG.IV_LENGTH;
+                
+                // Read encrypted message length (4 bytes)
+                const messageLength = (fullData[offset] << 24) | 
+                                (fullData[offset + 1] << 16) | 
+                                (fullData[offset + 2] << 8) | 
+                                fullData[offset + 3];
+                offset += 4;
+                
+                // Read encrypted message
+                const encryptedMessage = fullData.slice(offset, offset + messageLength);
+                
+                // Import metadata key
+                const metadataKey = await window.crypto.subtle.importKey(
+                    'raw',
+                    metadataKeyData,
+                    {
+                        name: AES_CONFIG.MODE,
+                        length: AES_CONFIG.KEY_LENGTH
+                    },
+                    false,
+                    ['decrypt']
+                );
+                
+                // Decrypt metadata
+                const decryptedMetadataBuffer = await window.crypto.subtle.decrypt(
+                    {
+                        name: AES_CONFIG.MODE,
+                        iv: metadataIv,
+                        tagLength: AES_CONFIG.TAG_LENGTH
+                    },
+                    metadataKey,
+                    encryptedMetadata
+                );
+                
+                // Parse metadata
+                const metadataText = new TextDecoder().decode(decryptedMetadataBuffer);
+                const metadata = JSON.parse(metadataText);
+                
+                // Verify key ID matches
+                if (metadata.k !== keyData.id) {
+                    throw new Error("Key ID mismatch - wrong key for this message");
+                }
+                
+                // Import the decryption key
+                let cryptoKey;
+                if (keyData._cryptoKey) {
+                    cryptoKey = keyData._cryptoKey;
+                } else {
+                    const keyBuffer = base64ToArrayBuffer(keyData.key);
+                    cryptoKey = await window.crypto.subtle.importKey(
+                        'raw',
+                        keyBuffer,
+                        {
+                            name: AES_CONFIG.MODE,
+                            length: AES_CONFIG.KEY_LENGTH
+                        },
+                        false,
+                        ['decrypt']
+                    );
+                }
+                
+                // Decrypt the message
+                return {
+                    data: await window.crypto.subtle.decrypt(
+                        {
+                            name: AES_CONFIG.MODE,
+                            iv: messageIv,
+                            tagLength: AES_CONFIG.TAG_LENGTH
+                        },
+                        cryptoKey,
+                        encryptedMessage
+                    ),
+                    metadata: metadata
+                };
+            } catch (error) {
+                console.error('AES Decryption error:', error);
+                
+                // Provide more detailed error information
+                if (error instanceof DOMException) {
+                    throw new Error(`Decryption failed: ${error.name} - ${error.message || 'Unknown WebCrypto error'}`);
+                } else {
+                    throw new Error('Decryption failed: ' + error.message);
+                }
             }
-            
-            // Decrypt with AES-GCM
-            const decryptedData = await window.crypto.subtle.decrypt(
-                {
-                    name: AES_CONFIG.MODE,
-                    iv: iv,
-                    tagLength: AES_CONFIG.TAG_LENGTH
-                },
-                cryptoKey,
-                encryptedData
-            );
-            
-            // Return raw buffer instead of text
-            return decryptedData;
+        }
+
+        // Function to update the main encrypt and downloadEncryptedFile functions to work with new format
+        function updateEncryptionOutput(encryptionResult) {
+            if (encryptionResult.version && encryptionResult.version >= 2) {
+                // New format - just base64 data
+                return `--LM2--\n${encryptionResult.data}\n--EM2--`;
+            } else {
+                // Legacy format - full JSON
+                const encryptionInfoStr = JSON.stringify(encryptionResult);
+                const encodedEncryptionInfo = btoa(encryptionInfoStr);
+                return `--LM--\n${encodedEncryptionInfo}\n--EM--`;
+            }
+        }
+
+        // Function to create the final encrypted message string
+        function createEncryptedMessageString(encryptionResult) {
+            if (encryptionResult.version && encryptionResult.version >= 2) {
+                // New format - just base64 data with new markers
+                return `--LM2--\n${encryptionResult.data}\n--EM2--`;
+            } else {
+                // Legacy format - full JSON
+                const encryptionInfoStr = JSON.stringify(encryptionResult);
+                const encodedEncryptionInfo = btoa(encryptionInfoStr);
+                return `--LM--\n${encodedEncryptionInfo}\n--EM--`;
+            }
+        }
+
+        // Function to parse encrypted message in either format
+        function parseEncryptedMessage(encryptedMessage) {
+            // Check for new format
+            if (encryptedMessage.includes('--LM2--') && encryptedMessage.includes('--EM2--')) {
+                const messageMatch = encryptedMessage.match(/--LM2--([\s\S]+?)--EM2--/);
+                if (!messageMatch || !messageMatch[1]) {
+                    throw new Error('Invalid encrypted message format');
+                }
+                
+                const encodedData = messageMatch[1].trim();
+                return {
+                    version: 2,
+                    data: encodedData
+                };
+            } 
+            // Check for legacy format
+            else if (encryptedMessage.includes('--LM--') && encryptedMessage.includes('--EM--')) {
+                const messageMatch = encryptedMessage.match(/--LM--([\s\S]+?)--EM--/);
+                if (!messageMatch || !messageMatch[1]) {
+                    throw new Error('Invalid encrypted message format');
+                }
+                
+                const encodedEncryptionInfo = messageMatch[1].trim();
+                try {
+                    return JSON.parse(atob(encodedEncryptionInfo));
+                } catch (error) {
+                    throw new Error('Invalid encrypted message data');
+                }
+            } else {
+                throw new Error('Unrecognized message format');
+            }
+        }
+
+        function isValidEncryptedMessage(message) {
+            return /^--LM--\s*[A-Za-z0-9+/=]+\s*--EM--$/s.test(message) || 
+                /^--LM2--\s*[A-Za-z0-9+/=]+\s*--EM2--$/s.test(message);
         }
         
         async function decryptWithRSA(encryptionInfo, keyData) {
-            // Get the encrypted AES key, encrypted data, and IV
-            const encryptedAesKey = base64ToArrayBuffer(encryptionInfo.encryptedKey);
-            const encryptedData = base64ToArrayBuffer(encryptionInfo.data);
-            const iv = base64ToArrayBuffer(encryptionInfo.iv);
-            
-            // Import the RSA private key
-            let rsaPrivateKey;
-            if (keyData._privateKey) {
-                rsaPrivateKey = keyData._privateKey;
-            } else {
-                const privateKeyBuffer = base64ToArrayBuffer(keyData.privateKey);
-                rsaPrivateKey = await importRSAPrivateKey(
-                    privateKeyBuffer,
-                    encryptionInfo.keySize || keyData.length || RSA_CONFIG.KEY_SIZE
+            // Check version to support both old and new formats
+            if (!encryptionInfo.version || encryptionInfo.version === 1) {
+                // Legacy decryption
+                const encryptedData = base64ToArrayBuffer(encryptionInfo.data);
+                const encryptedAesKey = base64ToArrayBuffer(encryptionInfo.encryptedKey);
+                const iv = base64ToArrayBuffer(encryptionInfo.iv);
+                
+                // Import the RSA private key
+                let rsaPrivateKey;
+                if (keyData._privateKey) {
+                    rsaPrivateKey = keyData._privateKey;
+                } else {
+                    const privateKeyBuffer = base64ToArrayBuffer(keyData.privateKey);
+                    rsaPrivateKey = await importRSAPrivateKey(
+                        privateKeyBuffer,
+                        encryptionInfo.keySize || keyData.length || RSA_CONFIG.KEY_SIZE
+                    );
+                }
+                
+                // Decrypt the AES key with RSA
+                const aesKeyBuffer = await window.crypto.subtle.decrypt(
+                    {
+                        name: RSA_CONFIG.ALGORITHM
+                    },
+                    rsaPrivateKey,
+                    encryptedAesKey
                 );
+                
+                // Import the AES key
+                const aesKey = await importAESKey(aesKeyBuffer);
+                
+                // Decrypt the message with the AES key
+                return await window.crypto.subtle.decrypt(
+                    {
+                        name: AES_CONFIG.MODE,
+                        iv: iv,
+                        tagLength: AES_CONFIG.TAG_LENGTH
+                    },
+                    aesKey,
+                    encryptedData
+                );
+            } else {
+                // Version 2+ decryption
+                const fullBuffer = base64ToArrayBuffer(encryptionInfo.data);
+                const fullData = new Uint8Array(fullBuffer);
+                
+                let offset = 0;
+                
+                // Read metadata IV length
+                const metadataIvLength = fullData[offset++];
+                
+                // Read metadata IV
+                const metadataIv = fullData.slice(offset, offset + metadataIvLength);
+                offset += metadataIvLength;
+                
+                // Read metadata key length
+                const metadataKeyLength = (fullData[offset] << 24) | 
+                                        (fullData[offset + 1] << 16) | 
+                                        (fullData[offset + 2] << 8) | 
+                                        fullData[offset + 3];
+                offset += 4;
+                
+                // Read metadata key
+                const metadataKeyData = fullData.slice(offset, offset + metadataKeyLength);
+                offset += metadataKeyLength;
+                
+                // Read encrypted metadata length
+                const metadataLength = (fullData[offset] << 24) | 
+                                    (fullData[offset + 1] << 16) | 
+                                    (fullData[offset + 2] << 8) | 
+                                    fullData[offset + 3];
+                offset += 4;
+                
+                // Read encrypted metadata
+                const encryptedMetadata = fullData.slice(offset, offset + metadataLength);
+                offset += metadataLength;
+                
+                // Read RSA encrypted key length
+                const encryptedKeyLength = (fullData[offset] << 24) | 
+                                        (fullData[offset + 1] << 16) | 
+                                        (fullData[offset + 2] << 8) | 
+                                        fullData[offset + 3];
+                offset += 4;
+                
+                // Read RSA encrypted key
+                const encryptedAesKey = fullData.slice(offset, offset + encryptedKeyLength);
+                offset += encryptedKeyLength;
+                
+                // Read AES IV
+                const iv = fullData.slice(offset, offset + AES_CONFIG.IV_LENGTH);
+                offset += AES_CONFIG.IV_LENGTH;
+                
+                // Read encrypted message length
+                const messageLength = (fullData[offset] << 24) | 
+                                    (fullData[offset + 1] << 16) | 
+                                    (fullData[offset + 2] << 8) | 
+                                    fullData[offset + 3];
+                offset += 4;
+                
+                // Read encrypted message
+                const encryptedMessage = fullData.slice(offset, offset + messageLength);
+                
+                // Import the RSA private key
+                let rsaPrivateKey;
+                if (keyData._privateKey) {
+                    rsaPrivateKey = keyData._privateKey;
+                } else {
+                    const privateKeyBuffer = base64ToArrayBuffer(keyData.privateKey);
+                    rsaPrivateKey = await importRSAPrivateKey(
+                        privateKeyBuffer,
+                        keyData.length || RSA_CONFIG.KEY_SIZE
+                    );
+                }
+                
+                // Decrypt the AES key with RSA
+                const aesKeyBuffer = await window.crypto.subtle.decrypt(
+                    {
+                        name: RSA_CONFIG.ALGORITHM
+                    },
+                    rsaPrivateKey,
+                    encryptedAesKey
+                );
+                
+                // Import metadata encryption key
+                const metadataKey = await window.crypto.subtle.importKey(
+                    'raw',
+                    metadataKeyData,
+                    {
+                        name: AES_CONFIG.MODE,
+                        length: metadataKeyLength * 8
+                    },
+                    false,
+                    ['decrypt']
+                );
+                
+                // Decrypt metadata
+                const decryptedMetadataBuffer = await window.crypto.subtle.decrypt(
+                    {
+                        name: AES_CONFIG.MODE,
+                        iv: metadataIv,
+                        tagLength: AES_CONFIG.TAG_LENGTH
+                    },
+                    metadataKey,
+                    encryptedMetadata
+                );
+                
+                // Parse metadata
+                const metadataText = new TextDecoder().decode(decryptedMetadataBuffer);
+                const metadata = JSON.parse(metadataText);
+                
+                // Verify key ID matches
+                if (metadata.k !== keyData.id) {
+                    throw new Error("Key ID mismatch - wrong key for this message");
+                }
+                
+                // Import the AES key
+                const aesKey = await importAESKey(aesKeyBuffer);
+                
+                // Decrypt the message with the AES key
+                return {
+                    data: await window.crypto.subtle.decrypt(
+                        {
+                            name: AES_CONFIG.MODE,
+                            iv: iv,
+                            tagLength: AES_CONFIG.TAG_LENGTH
+                        },
+                        aesKey,
+                        encryptedMessage
+                    ),
+                    metadata: metadata
+                };
             }
-            
-            // Decrypt the AES key with RSA
-            const aesKeyBuffer = await window.crypto.subtle.decrypt(
-                {
-                    name: RSA_CONFIG.ALGORITHM
-                },
-                rsaPrivateKey,
-                encryptedAesKey
-            );
-            
-            // Import the AES key
-            const aesKey = await importAESKey(aesKeyBuffer);
-            
-            // Decrypt the message with the AES key
-            const decryptedData = await window.crypto.subtle.decrypt(
-                {
-                    name: AES_CONFIG.MODE,
-                    iv: iv,
-                    tagLength: AES_CONFIG.TAG_LENGTH
-                },
-                aesKey,
-                encryptedData
-            );
-            
-            // Return raw buffer instead of text
-            return decryptedData;
         }
 
         async function decryptWithECC(encryptionInfo, keyData) {
-            // Get the encrypted data, ephemeral public key, and IV
-            const encryptedData = base64ToArrayBuffer(encryptionInfo.data);
-            const ephemeralPublicKeyBuffer = base64ToArrayBuffer(encryptionInfo.ephemeralPublicKey);
-            const iv = base64ToArrayBuffer(encryptionInfo.iv);
-            
-            // Import the ephemeral public key
-            const ephemeralPublicKey = await importECCPublicKey(
-                ephemeralPublicKeyBuffer,
-                encryptionInfo.curve || ECC_CONFIG.CURVE
-            );
-            
-            // Import the private key
-            let privateKey;
-            if (keyData._privateKey) {
-                privateKey = keyData._privateKey;
-            } else {
-                const privateKeyBuffer = base64ToArrayBuffer(keyData.privateKey);
-                privateKey = await importECCPrivateKey(
-                    privateKeyBuffer,
+            // Check version to support both old and new formats
+            if (!encryptionInfo.version || encryptionInfo.version === 1) {
+                // Legacy decryption
+                const encryptedData = base64ToArrayBuffer(encryptionInfo.data);
+                const ephemeralPublicKeyBuffer = base64ToArrayBuffer(encryptionInfo.ephemeralPublicKey);
+                const iv = base64ToArrayBuffer(encryptionInfo.iv);
+                
+                // Import the ephemeral public key
+                const ephemeralPublicKey = await importECCPublicKey(
+                    ephemeralPublicKeyBuffer,
                     encryptionInfo.curve || ECC_CONFIG.CURVE
                 );
+                
+                // Import the private key
+                let privateKey;
+                if (keyData._privateKey) {
+                    privateKey = keyData._privateKey;
+                } else {
+                    const privateKeyBuffer = base64ToArrayBuffer(keyData.privateKey);
+                    privateKey = await importECCPrivateKey(
+                        privateKeyBuffer,
+                        encryptionInfo.curve || ECC_CONFIG.CURVE
+                    );
+                }
+                
+                // Derive the shared secret using ECDH
+                const derivedKey = await window.crypto.subtle.deriveKey(
+                    {
+                        name: 'ECDH',
+                        public: ephemeralPublicKey
+                    },
+                    privateKey,
+                    {
+                        name: AES_CONFIG.MODE,
+                        length: AES_CONFIG.KEY_LENGTH
+                    },
+                    false,
+                    ['decrypt']
+                );
+                
+                // Decrypt the message with the derived key
+                return await window.crypto.subtle.decrypt(
+                    {
+                        name: AES_CONFIG.MODE,
+                        iv: iv,
+                        tagLength: AES_CONFIG.TAG_LENGTH
+                    },
+                    derivedKey,
+                    encryptedData
+                );
+            } else {
+                // Version 2+ decryption
+                const fullBuffer = base64ToArrayBuffer(encryptionInfo.data);
+                const fullData = new Uint8Array(fullBuffer);
+                
+                let offset = 0;
+                
+                // Read metadata IV length
+                const metadataIvLength = fullData[offset++];
+                
+                // Read metadata IV
+                const metadataIv = fullData.slice(offset, offset + metadataIvLength);
+                offset += metadataIvLength;
+                
+                // Read metadata key length
+                const metadataKeyLength = (fullData[offset] << 24) | 
+                                        (fullData[offset + 1] << 16) | 
+                                        (fullData[offset + 2] << 8) | 
+                                        fullData[offset + 3];
+                offset += 4;  // FIXED: Changed "a4" to "4"
+                
+                // Read metadata key
+                const metadataKeyData = fullData.slice(offset, offset + metadataKeyLength);
+                offset += metadataKeyLength;
+                
+                // Read encrypted metadata length
+                const metadataLength = (fullData[offset] << 24) | 
+                                    (fullData[offset + 1] << 16) | 
+                                    (fullData[offset + 2] << 8) | 
+                                    fullData[offset + 3];
+                offset += 4;
+                
+                // Read encrypted metadata
+                const encryptedMetadata = fullData.slice(offset, offset + metadataLength);
+                offset += metadataLength;
+                
+                // Read ephemeral public key length
+                const ephemeralKeyLength = (fullData[offset] << 24) | 
+                                        (fullData[offset + 1] << 16) | 
+                                        (fullData[offset + 2] << 8) | 
+                                        fullData[offset + 3];
+                offset += 4;
+                
+                // Read ephemeral public key
+                const ephemeralPublicKeyData = fullData.slice(offset, offset + ephemeralKeyLength);
+                offset += ephemeralKeyLength;
+                
+                // Read AES IV
+                const iv = fullData.slice(offset, offset + AES_CONFIG.IV_LENGTH);
+                offset += AES_CONFIG.IV_LENGTH;
+                
+                // Read encrypted message length
+                const messageLength = (fullData[offset] << 24) | 
+                                    (fullData[offset + 1] << 16) | 
+                                    (fullData[offset + 2] << 8) | 
+                                    fullData[offset + 3];
+                offset += 4;
+                
+                // Read encrypted message
+                const encryptedMessage = fullData.slice(offset, offset + messageLength);
+                
+                // Import the ephemeral public key
+                const ephemeralPublicKey = await importECCPublicKey(
+                    ephemeralPublicKeyData,
+                    keyData.curve || ECC_CONFIG.CURVE
+                );
+                
+                // Import the private key
+                let privateKey;
+                if (keyData._privateKey) {
+                    privateKey = keyData._privateKey;
+                } else {
+                    const privateKeyBuffer = base64ToArrayBuffer(keyData.privateKey);
+                    privateKey = await importECCPrivateKey(
+                        privateKeyBuffer,
+                        keyData.curve || ECC_CONFIG.CURVE
+                    );
+                }
+                
+                // Derive the shared secret using ECDH
+                const sharedSecretBits = await window.crypto.subtle.deriveBits(
+                    {
+                        name: 'ECDH',
+                        public: ephemeralPublicKey
+                    },
+                    privateKey,
+                    256 // 256 bits for AES-256
+                );
+                
+                // Import the AES key from the shared secret
+                const derivedKey = await window.crypto.subtle.importKey(
+                    'raw',
+                    sharedSecretBits,
+                    {
+                        name: AES_CONFIG.MODE,
+                        length: AES_CONFIG.KEY_LENGTH
+                    },
+                    false,
+                    ['decrypt']
+                );
+                
+                // Import metadata encryption key
+                const metadataKey = await window.crypto.subtle.importKey(
+                    'raw',
+                    metadataKeyData,
+                    {
+                        name: AES_CONFIG.MODE,
+                        length: metadataKeyLength * 8
+                    },
+                    false,
+                    ['decrypt']
+                );
+                
+                // Decrypt metadata
+                const decryptedMetadataBuffer = await window.crypto.subtle.decrypt(
+                    {
+                        name: AES_CONFIG.MODE,
+                        iv: metadataIv,
+                        tagLength: AES_CONFIG.TAG_LENGTH
+                    },
+                    metadataKey,
+                    encryptedMetadata
+                );
+                
+                // Parse metadata
+                const metadataText = new TextDecoder().decode(decryptedMetadataBuffer);
+                const metadata = JSON.parse(metadataText);
+                
+                // Verify key ID matches
+                if (metadata.k !== keyData.id) {
+                    throw new Error("Key ID mismatch - wrong key for this message");
+                }
+                
+                // Decrypt the message with the derived key
+                return {
+                    data: await window.crypto.subtle.decrypt(
+                        {
+                            name: AES_CONFIG.MODE,
+                            iv: iv,
+                            tagLength: AES_CONFIG.TAG_LENGTH
+                        },
+                        derivedKey,
+                        encryptedMessage
+                    ),
+                    metadata: metadata
+                };
             }
-            
-            // Derive the shared secret using ECDH
-            const derivedKey = await window.crypto.subtle.deriveKey(
-                {
-                    name: 'ECDH',
-                    public: ephemeralPublicKey
-                },
-                privateKey,
-                {
-                    name: AES_CONFIG.MODE,
-                    length: AES_CONFIG.KEY_LENGTH
-                },
-                false,
-                ['decrypt']
-            );
-            
-            // Decrypt the message with the derived key
-            const decryptedData = await window.crypto.subtle.decrypt(
-                {
-                    name: AES_CONFIG.MODE,
-                    iv: iv,
-                    tagLength: AES_CONFIG.TAG_LENGTH
-                },
-                derivedKey,
-                encryptedData
-            );
-            
-            // Return raw buffer instead of text
-            return decryptedData;
         }
 
         // File download functions
@@ -3548,6 +4385,46 @@
                 throw new Error('Invalid base64 data: ' + error.message);
             }
         }
+
+        // Main function to handle encryption for all types
+        async function encryptData(messageBuffer, keyData) {
+            if (keyData.type === 'aes') {
+                return await encryptWithAES(messageBuffer, keyData);
+            } else if (keyData.type === 'rsa' || keyData.type === 'rsa-4096') {
+                return await encryptWithRSA(messageBuffer, keyData);
+            } else if (keyData.type === 'ecc' || keyData.type === 'ecc-p384') {
+                return await encryptWithECC(messageBuffer, keyData);
+            } else {
+                throw new Error('Unsupported key type');
+            }
+        }
+
+        // Main function to handle decryption for all types
+        async function decryptData(encryptionInfo, keyData) {
+            // For V2 format, determine algorithm based on key type
+            if (encryptionInfo.version === 2) {
+                if (keyData.type === 'aes') {
+                    return await decryptWithAES(encryptionInfo, keyData);
+                } else if (keyData.type === 'rsa' || keyData.type === 'rsa-4096') {
+                    return await decryptWithRSA(encryptionInfo, keyData);
+                } else if (keyData.type === 'ecc' || keyData.type === 'ecc-p384') {
+                    return await decryptWithECC(encryptionInfo, keyData);
+                }
+            }
+            
+            // For V1 format or other cases, use the algorithm field
+            if (encryptionInfo.algorithm === AES_CONFIG.MODE) {
+                return await decryptWithAES(encryptionInfo, keyData);
+            } else if (encryptionInfo.algorithm === RSA_CONFIG.ALGORITHM + '+' + AES_CONFIG.MODE || 
+                    encryptionInfo.algorithm === 'RSA-OAEP+AES-GCM') {
+                return await decryptWithRSA(encryptionInfo, keyData);
+            } else if (encryptionInfo.algorithm === 'ECDH+' + AES_CONFIG.MODE || 
+                    encryptionInfo.algorithm === 'ECDH+AES-GCM') {
+                return await decryptWithECC(encryptionInfo, keyData);
+            } else {
+                throw new Error('Unsupported encryption algorithm: ' + encryptionInfo.algorithm);
+            }
+        }
         
         async function deriveKeyFromPassword(password, salt) {
             // Convert password to an array buffer
@@ -3605,7 +4482,10 @@
             return window.crypto.subtle.importKey(
                 'raw',
                 keyData,
-                { name: AES_CONFIG.MODE },
+                {
+                    name: AES_CONFIG.MODE,
+                    length: AES_CONFIG.KEY_LENGTH 
+                },
                 false,
                 ['encrypt', 'decrypt']
             );
@@ -3928,7 +4808,7 @@
                 const textContent = textEvent.target.result;
                 
                 // Check if it's a valid Lemonade encrypted format
-                if (textContent.includes('--LM--') && textContent.includes('--EM--')) {
+                if (textContent.includes('--LM2--') && textContent.includes('--EM2--')) {
                     // It's a valid Lemonade encrypted message
                     document.getElementById('encryptedMessage').value = textContent;
                     decryptFileData = null; // Not treating as binary
