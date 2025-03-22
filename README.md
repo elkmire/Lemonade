@@ -41,10 +41,12 @@ Lemonade is an offline encryption system operating without external servers or c
 - **LOW**: Any key without password protection
 
 ### Key Import/Export Functions
-- Export public keys (.lim)
+- Export public* keys (.lim)
 - Export private keys (.lem)
 - Export state (all keys)
 - Import key files
+
+* = Exercise caution with disseminating AES .lim files, as they are the complete key.
 
 ## Encryption/Decryption Operations
 
@@ -75,13 +77,14 @@ Lemonade is an offline encryption system operating without external servers or c
 
 **Security Notice**: AES .lim files contain the complete encryption key and must be transmitted via secure channels only. RSA/ECC .lim files contain only public keys and have lower distribution security requirements.
 
-## PWA Installation
+## PWA Installation (Chromium-based or Safari on IOS)
 
 Install as offline application:
 1. Access **Settings** tab
 2. Locate "Install App" section
 3. Execute installation process
 4. Confirm browser installation prompts
+*X. For Safari, hit share, add to home screen to install pwa.
 
 ## Technical Specifications
 
