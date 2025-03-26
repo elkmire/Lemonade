@@ -953,6 +953,50 @@
     .remove-file:hover {
         background-color: rgba(204, 51, 0, 0.1);
     }
+
+    /* Password Modal Styles */
+    .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.7);
+        z-index: 1001;
+        justify-content: center;
+        align-items: center;
+    }
+    
+    .modal-content {
+        background-color: var(--card-bg);
+        padding: 20px;
+        border-radius: 12px;
+        max-width: 400px;
+        width: 90%;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        position: relative;
+    }
+    
+    body.dark-mode .modal-content {
+        border: 1px solid var(--accent-color);
+        box-shadow: 0 0 15px rgba(255, 0, 255, 0.5);
+    }
+    
+    .btn-primary {
+        background-color: var(--accent-color);
+        color: var(--button-text);
+        border: none;
+        border-radius: 8px;
+        padding: 12px 20px;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: background-color 0.3s, transform 0.1s;
+    }
+    
+    .btn-primary:hover {
+        background-color: var(--button-hover);
+    }
     </style>
 </head>
 <body>
@@ -1529,6 +1573,28 @@
                     btn.classList.remove('active');
                 }
             });
+            
+            // Clear encrypt and decrypt forms whenever tabs are switched
+            // Clear data in encrypt tab
+            document.getElementById('encryptMessage').value = '';
+            document.getElementById('encryptedOutput').value = '';
+            document.getElementById('encryptStatus').className = 'status';
+            document.getElementById('encryptStatus').textContent = '';
+            document.getElementById('encryptionKey').value = '';
+            document.getElementById('encryptionPassword').value = '';
+            document.getElementById('encryptionPasswordGroup').style.display = 'none';
+            clearEncryptFile();
+            
+            // Clear data in decrypt tab
+            document.getElementById('encryptedMessage').value = '';
+            document.getElementById('decryptedOutput').value = '';
+            document.getElementById('decryptStatus').className = 'status';
+            document.getElementById('decryptStatus').textContent = '';
+            document.getElementById('decryptionKey').value = '';
+            document.getElementById('decryptionPassword').value = '';
+            document.getElementById('decryptionPasswordGroup').style.display = 'none';
+            clearDecryptFile();
+            window.decryptedBinaryData = null;
             
             // Directly access each tab content by ID to ensure all tabs are handled
             document.getElementById('encrypt').classList.remove('active');
@@ -3767,10 +3833,21 @@
                 let fileExtension = '.lim'; // Default for public or symmetric keys
                 
                 if (isAsymmetric && exportPrivate) {
-                    // If exporting private key part, prompt for password
-                    const exportPassword = prompt("Please enter a password to protect this private key:", "");
+                    // If exporting private key part, prompt for password using the modal
+                    let exportPassword = '';
+                    try {
+                        exportPassword = await showPasswordModal(
+                            "Secure Your Private Key", 
+                            "Please enter a password to protect this private key:", 
+                            true // Show password strength meter
+                        );
+                    } catch (error) {
+                        // User cancelled the password entry
+                        return;
+                    }
+                    
+                    // If empty password, show warning confirmation
                     if (!exportPassword) {
-                        // User cancelled or entered empty password
                         if (!confirm("Warning: Exporting a private key without password protection is a security risk. Continue anyway?")) {
                             return;
                         }
@@ -3805,12 +3882,22 @@
                     if (exportPassword) {
                         // Decrypt with original password if needed
                         if (keyData.protected) {
-                            // This assumes the key is already unlocked in memory
-                            // In a real implementation, you'd need to prompt for the original password
-                            const decryptedKeyRef = await decryptKeyWithPassword(keyData, prompt("Enter the current key password:", ""));
-                            const decryptedKey = safeMemory.retrieve(decryptedKeyRef, true);
-                            exportData.privateKey = decryptedKey.privateKey;
-                            exportData.protected = false; // Reset protection status
+                            try {
+                                // Get current password from user
+                                const currentPassword = await showPasswordModal(
+                                    "Enter Current Password",
+                                    "Enter the current key password to continue:",
+                                    false
+                                );
+                                
+                                const decryptedKeyRef = await decryptKeyWithPassword(keyData, currentPassword);
+                                const decryptedKey = safeMemory.retrieve(decryptedKeyRef, true);
+                                exportData.privateKey = decryptedKey.privateKey;
+                                exportData.protected = false; // Reset protection status
+                            } catch (error) {
+                                showStatus('keyStatus', 'Export cancelled: ' + error.message, 'error');
+                                return;
+                            }
                         }
                         
                         // Encrypt with new password
@@ -3967,20 +4054,30 @@
                             }
                         }
                         
-                        // If importing a private key that's password-protected, prompt for password
+                        // If importing a private key that's password-protected, prompt for password using the modal
                         if (keyData.hasPrivate && keyData.protected) {
-                        const importPassword = prompt("This private key is password-protected. Please enter the password to import it:", "");
-                        if (!importPassword) {
-                            throw new Error('Password is required to import this protected private key');
-                        }
-                        
-                        // Store the original password for later use
-                        keyData._importPassword = importPassword;
+                            let importPassword = '';
+                            try {
+                                importPassword = await showPasswordModal(
+                                    "Protected Private Key",
+                                    "This private key is password-protected. Please enter the password to import it:",
+                                    false
+                                );
+                            } catch (error) {
+                                throw new Error('Password is required to import this protected private key');
+                            }
+                            
+                            if (!importPassword) {
+                                throw new Error('Password is required to import this protected private key');
+                            }
+                            
+                            // Store the original password for later use
+                            keyData._importPassword = importPassword;
                         }
                         
                         // Check if a key with this ID already exists
                         const existingKeyIndex = keys.findIndex(k => k.id === keyData.id);
-                        
+                
                         // Check if this might be a private key for an existing public key or vice versa
                         let isPotentialPair = false;
                         let pairIndex = -1;
@@ -4122,8 +4219,18 @@
                     return;
                 }
                 
-                // Ask for a password to protect the export
-                const password = prompt("Please enter a password to protect your key backup. This is highly recommended for security.", "");
+                // Ask for a password to protect the export using the modal
+                let password = '';
+                try {
+                    password = await showPasswordModal(
+                        "Secure Your Key Backup",
+                        "Please enter a password to protect your key backup. This is highly recommended for security.",
+                        true // Show password strength meter
+                    );
+                } catch (error) {
+                    // User cancelled password entry
+                    return;
+                }
                 
                 // Create a data blob
                 let exportData;
@@ -4158,7 +4265,7 @@
                     exportData = JSON.stringify(keys);
                 }
                 
-                // Create the download link - using application/octet-stream for better Android compatibility
+                // Create the download link
                 const blob = new Blob([exportData], { type: 'application/octet-stream' });
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
@@ -4219,7 +4326,17 @@
                         
                         // Check if it's a protected backup
                         if (importData.format === 'LemonadeProtectedBackup') {
-                            const password = prompt("This state file is password-protected. Please enter the password to import:", "");
+                            let password = '';
+                            try {
+                                password = await showPasswordModal(
+                                    "Protected State File",
+                                    "This state file is password-protected. Please enter the password to import:",
+                                    false
+                                );
+                            } catch (error) {
+                                throw new Error('Password is required to import this protected state file');
+                            }
+                            
                             if (!password) {
                                 throw new Error('Password is required to import this protected state file');
                             }
@@ -4777,6 +4894,27 @@
             // Clear any previous decrypted binary data
             window.decryptedBinaryData = null;
         });
+
+            // Set up confirm and cancel buttons
+            document.getElementById('passwordModalConfirm').addEventListener('click', confirmPasswordModal);
+            document.getElementById('passwordModalCancel').addEventListener('click', cancelPasswordModal);
+            
+            // Set up password strength meter
+            document.getElementById('passwordModalInput').addEventListener('input', updateModalPasswordStrength);
+            
+            // Allow Enter key to confirm
+            document.getElementById('passwordModalInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    confirmPasswordModal();
+                }
+            });
+            
+            // Allow Escape key to cancel
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && document.getElementById('passwordModal').style.display === 'flex') {
+                    cancelPasswordModal();
+                }
+            });
         });
 
         // File handling functions
@@ -4865,5 +5003,20 @@
         }
 
     </script>
+<div id="passwordModal" class="modal">
+    <div class="modal-content">
+        <h3 id="passwordModalTitle">Enter Password</h3>
+        <p id="passwordModalMessage">Please enter a password to continue:</p>
+        <div class="form-group">
+            <input type="password" id="passwordModalInput" placeholder="Enter password">
+            <div id="passwordModalStrength" class="password-strength"></div>
+            <div id="passwordModalFeedback" class="password-feedback"></div>
+        </div>
+        <div class="btn-group">
+            <button id="passwordModalConfirm" class="btn-primary">Confirm</button>
+            <button id="passwordModalCancel" class="btn-secondary">Cancel</button>
+        </div>
+    </div>
+</div>
 </body>
 </html>
