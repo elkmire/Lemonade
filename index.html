@@ -2249,19 +2249,7 @@
                 let securityBadge = '';
                 
                 // Determine security level
-                let securityLevel = 'low'; // Default to low (any key without password protection)
-
-                // For keys with password protection
-                if (keyData.protected) {
-                    if (keyData.type === 'aes' || 
-                        (keyData.type === 'rsa-4096') || 
-                        (keyData.type === 'ecc-p384')) {
-                        securityLevel = 'high';  // AES-256, RSA-4096, or ECC-P384 with password protection
-                    } else if ((keyData.type === 'rsa') || 
-                            (keyData.type === 'ecc')) {
-                        securityLevel = 'medium'; // RSA-2048 or ECC-P256 with password protection
-                    }
-                }
+                let securityLevel = determineKeySecurityLevel(keyData);
                 
                 securityBadge = `<span class="security-badge ${securityLevel}">${securityLevel.toUpperCase()}</span>`;
                 
@@ -2570,7 +2558,7 @@
                 // 10. Construct the buffer with a simplified structure:
                 // [struct_version(1B)][metadataIv(12B)][metadataKeyLen(4B)][metadataKey][metadataLen(4B)][metadata][messageIv(12B)][messageLen(4B)][message]
                 
-                // Version identifier - makes future updates easier
+                // Version identifier - 
                 const structVersion = 3; // New format version
                 
                 // Calculate buffer size
@@ -2633,7 +2621,7 @@
                 
                 // Return the result
                 return {
-                    version: 3, // Updated version indicator
+                    version: 3, 
                     data: arrayBufferToBase64(result.buffer)
                 };
             } catch (error) {
@@ -3347,6 +3335,66 @@
 
         function isValidEncryptedMessage(message) {
             return /^@!\s*[A-Za-z0-9+/=]+\s*!@$/s.test(message);
+        }
+
+        function determineKeySecurityLevel(keyData) {
+            // Start with base security level based on the algorithm and bit length
+            let baseLevel = 'low';
+            
+            // Determine base level by algorithm strength
+            if (keyData.type === 'aes' || 
+                keyData.type === 'rsa-4096' || 
+                keyData.type === 'ecc-p384') {
+                baseLevel = 'medium';  // Strong algorithms start at medium
+            } else if (keyData.type === 'rsa' || 
+                    keyData.type === 'ecc') {
+                baseLevel = 'low';     // Less strong algorithms start at low
+            }
+            
+            // Calculate final security level considering multiple factors
+            let securityPoints = 0;
+            
+            // Factor 1: Password protection
+            if (keyData.protected) {
+                securityPoints += 2;
+            }
+            
+            // Factor 2: Key completeness (for asymmetric keys)
+            if (keyData.type !== 'aes') { // Only for asymmetric keys
+                if (keyData.hasPublic && keyData.hasPrivate) {
+                    securityPoints += 1; // Complete key pair is more secure
+                }
+            }
+            
+            // Factor 3: Key expiration
+            if (keyData.expiry) {
+                securityPoints += 1; // Having an expiration adds security
+            }
+            
+            // Determine final level based on points and base level
+            let finalLevel;
+            
+            if (baseLevel === 'medium') {
+                // For stronger algorithms:
+                if (securityPoints >= 3) {
+                    finalLevel = 'high';
+                } else if (securityPoints >= 1) {
+                    finalLevel = 'medium';
+                } else {
+                    finalLevel = 'low';
+                }
+            } else {
+                // For weaker algorithms:
+                if (securityPoints >= 4) {
+                    finalLevel = 'high';
+                } else if (securityPoints >= 2) {
+                    finalLevel = 'medium';
+                } else {
+                    finalLevel = 'low';
+                }
+            }
+            
+            return finalLevel;
         }
         
         async function decryptWithRSA(encryptionInfo, keyData) {
@@ -4075,7 +4123,7 @@
                         }
                         
                         if (isPotentialPair && pairIndex >= 0) {
-                            // We found a potential pair - ask if user wants to merge them
+                            // found a potential pair - ask if user wants to merge them
                             const mergePair = confirm(
                                 `This appears to be the ${keyData.hasPrivate ? 'private' : 'public'} key part of an existing key. ` +
                                 `Would you like to merge them into a complete key pair?`
@@ -4113,7 +4161,7 @@
                                 existingKey.pairedKeyId = existingKey.id;
                                 
                                 await saveKeys();
-                                showStatus('keyStatus', `Key "${existingKey.name}" updated with ${keyData.hasPrivate ? 'private' : 'public'} key part`, 'success');
+                                showStatus('keyStatus', `Key "${existingKey.name}" updated with ${keyData.hasPrivate ? 'private' : 'public'} key part. Security level: ${determineKeySecurityLevel(existingKey).toUpperCase()}`, 'success');
                             } else {
                                 // User chose not to merge, import as separate key
                                 keyData.id = crypto.randomUUID(); // Generate new ID to avoid conflict
