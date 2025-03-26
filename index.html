@@ -4441,6 +4441,95 @@
                 }
             }, 10000);
         }
+
+        // Password Modal Functionality
+        let passwordModalCallback = null;
+        let passwordModalResolve = null;
+        let passwordModalReject = null;
+
+        // Function to show password modal and return a promise with the result
+        function showPasswordModal(title, message, showStrength = false) {
+            return new Promise((resolve, reject) => {
+                const modal = document.getElementById('passwordModal');
+                const modalTitle = document.getElementById('passwordModalTitle');
+                const modalMessage = document.getElementById('passwordModalMessage');
+                const passwordInput = document.getElementById('passwordModalInput');
+                const passwordStrength = document.getElementById('passwordModalStrength');
+                const passwordFeedback = document.getElementById('passwordModalFeedback');
+                
+                // Set modal content
+                modalTitle.textContent = title;
+                modalMessage.textContent = message;
+                passwordInput.value = '';
+                
+                // Show/hide password strength meter
+                passwordStrength.style.display = showStrength ? 'block' : 'none';
+                passwordFeedback.style.display = showStrength ? 'block' : 'none';
+                
+                // Store the resolve/reject functions
+                passwordModalResolve = resolve;
+                passwordModalReject = reject;
+                
+                // Show the modal
+                modal.style.display = 'flex';
+                
+                // Focus the input
+                setTimeout(() => {
+                    passwordInput.focus();
+                }, 100);
+            });
+        }
+
+        // Event handler for password modal confirm button
+        function confirmPasswordModal() {
+            const passwordInput = document.getElementById('passwordModalInput');
+            const password = passwordInput.value;
+            
+            // Hide the modal
+            document.getElementById('passwordModal').style.display = 'none';
+            
+            // Resolve the promise with the password
+            if (passwordModalResolve) {
+                passwordModalResolve(password);
+                passwordModalResolve = null;
+                passwordModalReject = null;
+            }
+        }
+
+        // Event handler for password modal cancel button
+        function cancelPasswordModal() {
+            // Hide the modal
+            document.getElementById('passwordModal').style.display = 'none';
+            
+            // Reject the promise
+            if (passwordModalReject) {
+                passwordModalReject(new Error('Password entry cancelled'));
+                passwordModalResolve = null;
+                passwordModalReject = null;
+            }
+        }
+
+        // Handle password strength in the modal
+        function updateModalPasswordStrength() {
+            const password = document.getElementById('passwordModalInput').value;
+            const strength = validator.measurePasswordStrength(password);
+            
+            const strengthElement = document.getElementById('passwordModalStrength');
+            const feedbackElement = document.getElementById('passwordModalFeedback');
+            
+            // Clear existing classes
+            strengthElement.className = 'password-strength';
+            
+            if (password) {
+                // Add class based on strength
+                strengthElement.classList.add(strength.strengthCategory);
+                
+                // Update feedback
+                feedbackElement.textContent = strength.feedback;
+            } else {
+                feedbackElement.textContent = '';
+            }
+        }
         
         async function copyToClipboard(sourceElementId, statusElementId) {
             const text = document.getElementById(sourceElementId).value;
