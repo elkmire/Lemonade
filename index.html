@@ -4462,6 +4462,10 @@
                 modalMessage.textContent = message;
                 passwordInput.value = '';
                 
+                // Reset password strength indicator - add this to ensure it starts fresh
+                passwordStrength.className = 'password-strength';
+                passwordFeedback.textContent = '';
+                
                 // Show/hide password strength meter
                 passwordStrength.style.display = showStrength ? 'block' : 'none';
                 passwordFeedback.style.display = showStrength ? 'block' : 'none';
@@ -4480,10 +4484,18 @@
             });
         }
 
-        // Event handler for password modal confirm button
+        // confirmPasswordModal function
         function confirmPasswordModal() {
             const passwordInput = document.getElementById('passwordModalInput');
             const password = passwordInput.value;
+            
+            // Get references to strength elements
+            const passwordStrength = document.getElementById('passwordModalStrength');
+            const passwordFeedback = document.getElementById('passwordModalFeedback');
+            
+            // Reset strength indicator and feedback
+            passwordStrength.className = 'password-strength';
+            passwordFeedback.textContent = '';
             
             // Hide the modal
             document.getElementById('passwordModal').style.display = 'none';
@@ -4496,8 +4508,18 @@
             }
         }
 
-        // Event handler for password modal cancel button
+        // cancelPasswordModal function
         function cancelPasswordModal() {
+            // Get references to password input and strength elements
+            const passwordInput = document.getElementById('passwordModalInput');
+            const passwordStrength = document.getElementById('passwordModalStrength');
+            const passwordFeedback = document.getElementById('passwordModalFeedback');
+            
+            // Reset input, strength indicator and feedback
+            passwordInput.value = '';
+            passwordStrength.className = 'password-strength';
+            passwordFeedback.textContent = '';
+            
             // Hide the modal
             document.getElementById('passwordModal').style.display = 'none';
             
