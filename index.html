@@ -3322,68 +3322,31 @@
             }
         }
 
-        // Function to update the main encrypt and downloadEncryptedFile functions to work with new format
         function updateEncryptionOutput(encryptionResult) {
-            if (encryptionResult.version && encryptionResult.version >= 2) {
-                // New format - just base64 data
-                return `--LM2--\n${encryptionResult.data}\n--EM2--`;
-            } else {
-                // Legacy format - full JSON
-                const encryptionInfoStr = JSON.stringify(encryptionResult);
-                const encodedEncryptionInfo = btoa(encryptionInfoStr);
-                return `--LM--\n${encodedEncryptionInfo}\n--EM--`;
-            }
+            return `@!\n${encryptionResult.data}\n!@`;
         }
 
         // Function to create the final encrypted message string
         function createEncryptedMessageString(encryptionResult) {
-            if (encryptionResult.version && encryptionResult.version >= 2) {
-                // New format - just base64 data with new markers
-                return `--LM2--\n${encryptionResult.data}\n--EM2--`;
-            } else {
-                // Legacy format - full JSON
-                const encryptionInfoStr = JSON.stringify(encryptionResult);
-                const encodedEncryptionInfo = btoa(encryptionInfoStr);
-                return `--LM--\n${encodedEncryptionInfo}\n--EM--`;
-            }
+            return `@!\n${encryptionResult.data}\n!@`;
         }
 
         // Function to parse encrypted message in either format
         function parseEncryptedMessage(encryptedMessage) {
-            // Check for new format
-            if (encryptedMessage.includes('--LM2--') && encryptedMessage.includes('--EM2--')) {
-                const messageMatch = encryptedMessage.match(/--LM2--([\s\S]+?)--EM2--/);
-                if (!messageMatch || !messageMatch[1]) {
-                    throw new Error('Invalid encrypted message format');
-                }
-                
-                const encodedData = messageMatch[1].trim();
-                return {
-                    version: 2,
-                    data: encodedData
-                };
-            } 
-            // Check for legacy format
-            else if (encryptedMessage.includes('--LM--') && encryptedMessage.includes('--EM--')) {
-                const messageMatch = encryptedMessage.match(/--LM--([\s\S]+?)--EM--/);
-                if (!messageMatch || !messageMatch[1]) {
-                    throw new Error('Invalid encrypted message format');
-                }
-                
-                const encodedEncryptionInfo = messageMatch[1].trim();
-                try {
-                    return JSON.parse(atob(encodedEncryptionInfo));
-                } catch (error) {
-                    throw new Error('Invalid encrypted message data');
-                }
-            } else {
-                throw new Error('Unrecognized message format');
+            const messageMatch = encryptedMessage.match(/@!([\s\S]+?)!@/);
+            if (!messageMatch || !messageMatch[1]) {
+                throw new Error('Invalid encrypted message format');
             }
+            
+            const encodedData = messageMatch[1].trim();
+            return {
+                version: 2,
+                data: encodedData
+            };
         }
 
         function isValidEncryptedMessage(message) {
-            return /^--LM--\s*[A-Za-z0-9+/=]+\s*--EM--$/s.test(message) || 
-                /^--LM2--\s*[A-Za-z0-9+/=]+\s*--EM2--$/s.test(message);
+            return /^@!\s*[A-Za-z0-9+/=]+\s*!@$/s.test(message);
         }
         
         async function decryptWithRSA(encryptionInfo, keyData) {
@@ -5057,7 +5020,7 @@
                 const textContent = textEvent.target.result;
                 
                 // Check if it's a valid Lemonade encrypted format
-                if (textContent.includes('--LM2--') && textContent.includes('--EM2--')) {
+                if (textContent.includes('@!') && textContent.includes('!@')) {
                     // It's a valid Lemonade encrypted message
                     document.getElementById('encryptedMessage').value = textContent;
                     decryptFileData = null; // Not treating as binary
@@ -5066,7 +5029,7 @@
                     showStatus('decryptStatus', 'Encrypted file loaded successfully.', 'success');
                 } else {
                     // Not a valid Lemonade format, might be binary
-                    showStatus('decryptStatus', 'This file is not in Lemonade encrypted format. Files must have the Lemonade header/footer markers.', 'error');
+                    showStatus('decryptStatus', 'This file is not in Lemonade encrypted format. Try again.', 'error');
                     document.getElementById('decryptFileInfo').style.display = 'none';
                 }
             };
