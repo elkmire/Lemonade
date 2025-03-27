@@ -287,7 +287,6 @@ For asymmetric encryption in an air-gapped environment:
 5. **Clear Memory**:
    - Close the browser after sensitive operations
    - Enable session-only mode for maximum security
-   - Use the clipboard clearing function after copying sensitive data
 
 ### Recommended Security Configuration
 
