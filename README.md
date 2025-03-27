@@ -153,7 +153,6 @@ Lemonade can be installed as a Progressive Web App for offline access:
 After installation:
 - The app will appear on your device's home screen or app launcher
 - It can run entirely offline
-- Updates are managed through the built-in service worker
 
 ## Air-Gap Implementation Strategy
 
