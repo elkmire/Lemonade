@@ -1,6 +1,6 @@
-# [LC4](https://elkmire.github.io/Lemonade/) <- Click Here
+# [LC5](https://elkmire.github.io/Lemonade/) <- Click Here
 
-# LC4: Offline Encryption System
+# LC5: Offline Encryption System
 
 ## Table of Contents
 1. [Overview](#overview)
@@ -14,7 +14,7 @@
 
 ## Overview
 
-LC4 (also called "Lemonade") is a browser-based encryption tool designed for secure message and file encryption with zero network dependencies. The application runs entirely in your browser, ensuring your sensitive data never leaves your device during the encryption or decryption process.
+LC5 (also called "Lemonade") is a browser-based encryption tool designed for secure message and file encryption with zero network dependencies. The application runs entirely in your browser, ensuring your sensitive data never leaves your device during the encryption or decryption process.
 
 **Key Features:**
 - Complete offline functionality
@@ -26,7 +26,7 @@ LC4 (also called "Lemonade") is a browser-based encryption tool designed for sec
 - Dark/light mode interface
 - Zero server dependencies
 
-LC4 stores all encryption keys and settings locally in your browser's protected storage. This design creates a "trust nothing" security model where you maintain complete control over your encryption keys and data.
+LC5 stores all encryption keys and settings locally in your browser's protected storage. This design creates a "trust nothing" security model where you maintain complete control over your encryption keys and data.
 
 ## Key Management
 
@@ -145,7 +145,7 @@ Lemonade uses several file extensions to differentiate between encrypted data an
 
 Lemonade can be installed as a Progressive Web App for offline access:
 
-1. Open LC4.html in a supported browser (Chrome, Edge, or Safari on iOS)
+1. Open LC5.html in a supported browser (Chrome, Edge, or Safari on iOS)
 2. Go to the **Settings** tab
 3. Click "Install Lemonade App" when the button is enabled
 4. Confirm the installation prompt from your browser
@@ -161,7 +161,7 @@ For maximum security, Lemonade can be deployed in an air-gapped environment:
 ### Setup Phase
 
 1. **Initial Transfer**:
-   - Transfer LC4.html to an air-gapped computer via a fresh, write-once USB drive
+   - Transfer LC5.html to an air-gapped computer via a fresh, write-once USB drive
    - Scan the file with an offline virus scanner as a precaution
    - Open the file in a browser on the air-gapped system
 
@@ -297,6 +297,6 @@ For maximum security:
 5. Use the dark mode interface to reduce visual signature
 6. Regularly generate new keys and securely delete old ones
 
-By following these practices and understanding the technical foundations of LC4/Lemonade, you can achieve a high level of communications security, even against sophisticated adversaries.
+By following these practices and understanding the technical foundations of LC5/Lemonade, you can achieve a high level of communications security, even against sophisticated adversaries.
 
 *Lemonade is a client-side application. All encryption and decryption operations are performed locally in your browser. No data is sent to any server, ensuring maximum privacy and security.*
