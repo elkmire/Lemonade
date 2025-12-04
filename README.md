@@ -14,7 +14,7 @@
 
 ## Overview
 
-LC5 (also called "Lemonade") is a browser-based encryption tool designed for secure message and file encryption with zero network dependencies. The application runs entirely in your browser, ensuring your sensitive data never leaves your device during the encryption or decryption process.
+LC6 (also called "Lemonade") is a browser-based encryption tool designed for secure message and file encryption with zero network dependencies. The application runs entirely in your browser, ensuring your sensitive data never leaves your device during the encryption or decryption process.
 
 **Key Features:**
 - Complete offline functionality
@@ -28,7 +28,7 @@ LC5 (also called "Lemonade") is a browser-based encryption tool designed for sec
 - A "Learn" tab to understand the app's features
 - Zero server dependencies
 
-LC5 stores all encryption keys and settings locally in your browser's protected storage. This design creates a "trust nothing" security model where you maintain complete control over your encryption keys and data.
+LC6 stores all encryption keys and settings locally in your browser's protected storage. This design creates a "trust nothing" security model where you maintain complete control over your encryption keys and data.
 
 ## Key Management
 
@@ -187,7 +187,7 @@ For maximum security, Lemonade can be deployed in an air-gapped environment:
 ### Setup Phase
 
 1. **Initial Transfer**:
-   - Transfer LC5.html to an air-gapped computer via a fresh, write-once USB drive
+   - Transfer LC6.html to an air-gapped computer via a fresh, write-once USB drive
    - Scan the file with an offline virus scanner as a precaution
    - Open the file in a browser on the air-gapped system
 
@@ -341,6 +341,6 @@ For maximum security:
 5. Use the dark mode interface to reduce visual signature
 6. Regularly generate new keys and securely delete old ones
 
-By following these practices and understanding the technical foundations of LC5/Lemonade, you can achieve a high level of communications security, even against sophisticated adversaries.
+By following these practices and understanding the technical foundations of LC6/Lemonade, you can achieve a high level of communications security, even against sophisticated adversaries.
 
 *Lemonade is a client-side application. All encryption and decryption operations are performed locally in your browser. No data is sent to any server, ensuring maximum privacy and security.*
