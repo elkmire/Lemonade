@@ -338,7 +338,7 @@ For maximum security:
 2. Enable "Enforce key expiration"
 3. Set PBKDF2 iterations to 500,000 (balance of security vs. speed)
 4. Enable "Session-only mode" for highly sensitive operations
-5. Use the dark mode interface to reduce visual signature
+5. Use the dark mode to be better
 6. Regularly generate new keys and securely delete old ones
 
 By following these practices and understanding the technical foundations of LC6/Lemonade, you can achieve a high level of communications security, even against sophisticated adversaries.
