@@ -1,6 +1,6 @@
-# [LC5](https://elkmire.github.io/Lemonade/) <- Click Here
+# [LC6](https://elkmire.github.io/Lemonade/) <- Click Here
 
-# LC5: Offline Encryption System
+# LC6: Offline Encryption System
 
 ## Table of Contents
 1. [Overview](#overview)
@@ -19,11 +19,13 @@ LC5 (also called "Lemonade") is a browser-based encryption tool designed for sec
 **Key Features:**
 - Complete offline functionality
 - Multiple encryption algorithms (AES, RSA, ECC)
-- Key generation and management
+- Key generation and management with expiration
 - Password-protected keys
-- File encryption support
+- Digital signatures for message authentication
+- File encryption with drag-and-drop support
 - Progressive Web App capabilities for offline use
-- Dark/light mode interface
+- Customizable dark mode themes (Lemon, Burnt, Zulu)
+- A "Learn" tab to understand the app's features
 - Zero server dependencies
 
 LC5 stores all encryption keys and settings locally in your browser's protected storage. This design creates a "trust nothing" security model where you maintain complete control over your encryption keys and data.
@@ -40,6 +42,7 @@ LC5 stores all encryption keys and settings locally in your browser's protected 
    - **RSA-OAEP (Asymmetric)** - 4096 bits: Public/private key pair, higher security
    - **ECC (Asymmetric)** - P-256: Elliptic curve public/private key pair, compact
    - **ECC (Asymmetric)** - P-384: Elliptic curve with higher security level
+   - **ECC (Asymmetric)** - P-521: Elliptic curve with the highest security level
 
 4. Set an expiration period (optional but recommended)
 5. Add a key password (highly recommended)
@@ -93,6 +96,13 @@ For backup and transfer between devices:
 
 The "ZERO ALL KEYS" button permanently deletes all keys from your browser storage. Use this in emergency situations when you need to quickly remove all cryptographic material.
 
+### Theming
+
+LC6 includes several dark mode themes to customize the application's appearance. You can choose from the following themes in the **Settings** tab:
+- **Lemon:** A zesty theme.
+- **Burnt:** A theme with orange and brown tones.
+- **Zulu:** A theme with magenta and pink tones.
+
 ## Encryption/Decryption Operations
 
 ### Encrypting Messages or Files
@@ -101,8 +111,10 @@ The "ZERO ALL KEYS" button permanently deletes all keys from your browser storag
 2. Enter your message in the text area or click "Browse Files" to select a file
 3. Select your encryption key from the dropdown
 4. Enter the key password if required
-5. Click "Encrypt Data"
-6. Copy the encrypted output or download as a file
+5. (Optional) Enter an "Extra Option" for an additional layer of obfuscation
+6. (Optional) Set the "Iterate" count to re-encrypt the data multiple times
+7. Click "Encrypt Data"
+8. Copy the encrypted output or download as a file
 
 ### Decrypting Messages or Files
 
@@ -112,8 +124,22 @@ The "ZERO ALL KEYS" button permanently deletes all keys from your browser storag
    - For AES: use the same key used for encryption
    - For RSA/ECC: use the private key corresponding to the public key used for encryption
 4. Enter the key password if required
-5. Click "Decrypt Data"
-6. View the decrypted output or download the decrypted file
+5. If an "Extra Option" was used during encryption, enter the same value
+6. Set the "Iterate" count to the same value used during encryption
+7. Click "Decrypt Data"
+8. View the decrypted output or download the decrypted file
+
+### Digital Signatures
+
+When using asymmetric keys (RSA or ECC), you can digitally sign your messages to prove their authenticity and integrity.
+
+**Signing a Message:**
+1. On the **Encrypt** tab, enable the "Sign Message" toggle after selecting an asymmetric key.
+2. The encrypted output will include a digital signature.
+
+**Verifying a Signature:**
+1. On the **Decrypt** tab, enable the "Verify Signature" toggle.
+2. After decryption, the application will confirm whether the signature is valid. A valid signature ensures the message was sent by the holder of the private key and was not tampered with.
 
 ### File Handling
 
@@ -145,7 +171,7 @@ Lemonade uses several file extensions to differentiate between encrypted data an
 
 Lemonade can be installed as a Progressive Web App for offline access:
 
-1. Open LC5.html in a supported browser (Chrome, Edge, or Safari on iOS)
+1. Open LC6.html in a supported browser (Chrome, Edge, or Safari on iOS)
 2. Go to the **Settings** tab
 3. Click "Install Lemonade App" when the button is enabled
 4. Confirm the installation prompt from your browser
@@ -205,6 +231,13 @@ For asymmetric encryption in an air-gapped environment:
    - Use the "ZERO ALL KEYS" function in case of compromise
    - Configure "Session-only mode" in settings for heightened security periods
 
+## Learn Section
+
+LC6 includes a new **Learn** tab that provides a comprehensive overview of the application's features. This section is designed to help users understand the core concepts of encryption, key management, and security best practices. It covers:
+- **Core Functionality:** A detailed explanation of the Encrypt and Decrypt tabs, including digital signatures, the "Extra Option" for obfuscation, and the "Iterate" feature.
+- **Key Management:** An overview of the different key types (AES, RSA, ECC), how to generate and manage them, and the importance of key passwords.
+- **Settings:** An explanation of the various security and appearance settings that can be configured.
+
 ## Technical Specifications
 
 ### Encryption Algorithms
@@ -223,10 +256,21 @@ For asymmetric encryption in an air-gapped environment:
 - SubjectPublicKeyInfo (SPKI) format for public keys
 
 **ECC (Elliptic Curve)**:
-- Curves: P-256 or P-384
+- Curves: P-256, P-384, or P-521
 - ECDH for key agreement
 - AES-GCM for payload encryption
 - HKDF for key derivation
+
+### Digital Signature Algorithms
+
+**RSA-PSS**:
+- Used for digital signatures with RSA keys
+- Hash function: SHA-512
+- Salt length: 32 bytes
+
+**ECDSA**:
+- Used for digital signatures with ECC keys
+- Hash function: SHA-512
 
 ### Storage Security
 
