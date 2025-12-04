@@ -102,6 +102,7 @@ LC6 includes several dark mode themes to customize the application's appearance.
 - **Lemon:** A zesty theme.
 - **Burnt:** A theme with orange and brown tones.
 - **Zulu:** A theme with magenta and pink tones.
+- **Zing:** A theme with tasty lime hints.
 
 ## Encryption/Decryption Operations
 
@@ -112,9 +113,8 @@ LC6 includes several dark mode themes to customize the application's appearance.
 3. Select your encryption key from the dropdown
 4. Enter the key password if required
 5. (Optional) Enter an "Extra Option" for an additional layer of obfuscation
-6. (Optional) Set the "Iterate" count to re-encrypt the data multiple times
-7. Click "Encrypt Data"
-8. Copy the encrypted output or download as a file
+6. Click "Encrypt Data"
+7. Copy the encrypted output or download as a file
 
 ### Decrypting Messages or Files
 
@@ -125,9 +125,8 @@ LC6 includes several dark mode themes to customize the application's appearance.
    - For RSA/ECC: use the private key corresponding to the public key used for encryption
 4. Enter the key password if required
 5. If an "Extra Option" was used during encryption, enter the same value
-6. Set the "Iterate" count to the same value used during encryption
-7. Click "Decrypt Data"
-8. View the decrypted output or download the decrypted file
+6. Click "Decrypt Data"
+7. View the decrypted output or download the decrypted file
 
 ### Digital Signatures
 
